@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TradePulse AI — Quant Bot with Risk Management</title>
+  <title>TradePulse AI — Auto TP/SL Quant Bot</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     body { background-color: #0b0e14; color: #e1e7ef; padding: 12px; }
@@ -39,15 +39,15 @@
     .btn-sell { background: #ef4444; color: #fff; padding: 10px; border: none; border-radius: 6px; font-weight: bold; width: 50%; cursor: pointer; }
     .btn-close { background: #334155; color: #fff; padding: 4px 8px; border: none; border-radius: 4px; font-size: 0.72rem; cursor: pointer; }
 
-    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.78rem; }
-    th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #1e293b; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.75rem; }
+    th, td { text-align: left; padding: 8px 4px; border-bottom: 1px solid #1e293b; }
     th { color: #64748b; font-weight: 600; }
   </style>
 </head>
 <body>
 
   <div class="header">
-    <h1>📈 TradePulse AI — Risk-Managed Quant Bot</h1>
+    <h1>📈 TradePulse AI — Auto TP/SL Quant Bot</h1>
     <div class="switch-container">
       <span id="status-label" style="color: #ef4444; font-size:0.8rem; font-weight:bold;">AUTO BOT OFF</span>
       <label class="switch">
@@ -57,7 +57,6 @@
     </div>
   </div>
 
-  <!-- Wallet & Equity Tracker -->
   <div class="metrics-grid">
     <div class="metric-card">
       <label>WALLET BALANCE</label>
@@ -95,20 +94,20 @@
   </div>
 
   <div class="card">
-    <h2>Smart Risk Guard Engine</h2>
+    <h2>Smart Risk & Auto TP/SL Engine</h2>
     <div class="signal-box">
       <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-size:0.85rem;">Bot Safety Limits:</span>
-        <span style="color: #22c55e; font-size: 0.78rem; font-weight: bold;">MAX 3 TRADES | 2% RISK PER TRADE</span>
+        <span style="font-size:0.85rem;">Bot Protection Mode:</span>
+        <span style="color: #22c55e; font-size: 0.78rem; font-weight: bold;">AUTO TP (+1.5%) & SL (-0.75%) SET</span>
       </div>
       <div class="ai-think-box" id="ai-reasoning">
-        🛡️ Risk Protection Active: Bot will prevent account liquidation by enforcing trade caps and free margin checks.
+        🎯 Auto TP/SL Active: Bot will auto-close trades when price hits Take-Profit or Stop-Loss targets.
       </div>
     </div>
   </div>
 
   <div class="card">
-    <h2>Manual Trading & Order Entry</h2>
+    <h2>Manual Trading Control</h2>
     <div class="controls-grid">
       <div>
         <label style="font-size:0.7rem; color:#64748b;">INITIAL BALANCE ($)</label>
@@ -126,19 +125,21 @@
   </div>
 
   <div class="card">
-    <h2>Active Open Trades & Live P&L</h2>
+    <h2>Active Trades, Auto TP/SL & Live P&L</h2>
     <table>
       <thead>
         <tr>
           <th>Asset</th>
           <th>Type</th>
           <th>Lots</th>
+          <th>TP Target</th>
+          <th>SL Target</th>
           <th>Live P&L ($)</th>
           <th>Action</th>
         </tr>
       </thead>
       <tbody id="active-trades-body">
-        <tr><td colspan="5" style="text-align: center; color: #64748b;">No active trades open.</td></tr>
+        <tr><td colspan="7" style="text-align: center; color: #64748b;">No active trades open.</td></tr>
       </tbody>
     </table>
   </div>
@@ -237,9 +238,8 @@
       scanInterval = setInterval(() => {
         if(!isBotActive) return;
 
-        // Risk Rule: Don't exceed MAX_OPEN_TRADES
         if(activePositions.length >= MAX_OPEN_TRADES) {
-          document.getElementById('ai-reasoning').innerText = `🛡️ Risk Guard: Max limit of ${MAX_OPEN_TRADES} open trades reached. Waiting to close trades before opening new ones.`;
+          document.getElementById('ai-reasoning').innerText = `🛡️ Risk Guard: Max ${MAX_OPEN_TRADES} trades open. Waiting for TP/SL trigger...`;
           return;
         }
 
@@ -255,7 +255,7 @@
         } else if(mockRSI > 70 && mockEMACross === 'BEARISH') {
           triggerAutoTrade(selectedAsset.name, 'SELL');
         } else {
-          document.getElementById('ai-reasoning').innerText = `Scanning ${selectedAsset.name}... Indicators analyzing confluence. Risk limits clean.`;
+          document.getElementById('ai-reasoning').innerText = `Scanning ${selectedAsset.name}... Calculating optimal entry with Auto TP/SL.`;
         }
       }, 4000);
     }
@@ -263,22 +263,27 @@
     function triggerAutoTrade(assetName, type) {
       const lot = parseFloat(document.getElementById('lot-size-input').value) || 0.10;
       
+      const tpAmount = (balance * 0.015) * (lot / 0.10); 
+      const slAmount = -(balance * 0.0075) * (lot / 0.10);
+
       const newTrade = {
         id: Date.now(),
         asset: assetName,
         type: type,
         lots: lot,
+        tp: tpAmount,
+        sl: slAmount,
         pnl: 0.00
       };
 
       activePositions.unshift(newTrade);
-      document.getElementById('ai-reasoning').innerText = `✅ Auto-Executed ${type} on ${assetName} (${lot} Lots). Safe position opened within risk limits.`;
+      document.getElementById('ai-reasoning').innerText = `✅ Auto Trade ${type} on ${assetName}! Auto TP (+$${tpAmount.toFixed(2)}) & SL ($${slAmount.toFixed(2)}) applied.`;
       renderPositions();
     }
 
     function executeManualTrade(type) {
       if(activePositions.length >= MAX_OPEN_TRADES) {
-        alert(`Risk limit reached! Maximum ${MAX_OPEN_TRADES} trades allowed at a time.`);
+        alert(`Maximum ${MAX_OPEN_TRADES} trades allowed at a time.`);
         return;
       }
 
@@ -286,37 +291,59 @@
       const selectElem = document.getElementById('symbol-select');
       const assetName = selectElem.options[selectElem.selectedIndex].text;
 
+      const tpAmount = (balance * 0.015) * (lot / 0.10);
+      const slAmount = -(balance * 0.0075) * (lot / 0.10);
+
       activePositions.unshift({
         id: Date.now(),
         asset: assetName,
         type: type,
         lots: lot,
+        tp: tpAmount,
+        sl: slAmount,
         pnl: 0.00
       });
       renderPositions();
     }
 
-    function closeTrade(id) {
+    function closeTrade(id, reason = "Manual") {
       const index = activePositions.findIndex(t => t.id === id);
       if(index !== -1) {
         const trade = activePositions[index];
-        balance += trade.pnl; // Update balance with realized profit/loss
+        balance += trade.pnl;
         activePositions.splice(index, 1);
         renderPositions();
         updateMetricsUI();
+        if(reason !== "Manual") {
+          document.getElementById('ai-reasoning').innerText = `🔔 Trade Closed by ${reason}: Realized P&L: ${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toFixed(2)}`;
+        }
       }
     }
 
     function startPNLSimulation() {
       pnlInterval = setInterval(() => {
-        activePositions.forEach(trade => {
-          // Simulate realistic market fluctuations based on lot size
+        for (let i = activePositions.length - 1; i >= 0; i--) {
+          let trade = activePositions[i];
           const change = (Math.random() - 0.48) * (trade.lots * 15);
           trade.pnl += change;
-        });
+
+          // Auto TP Trigger
+          if(trade.pnl >= trade.tp) {
+            trade.pnl = trade.tp;
+            closeTrade(trade.id, "Auto Take-Profit (TP)");
+            continue;
+          }
+
+          // Auto SL Trigger
+          if(trade.pnl <= trade.sl) {
+            trade.pnl = trade.sl;
+            closeTrade(trade.id, "Auto Stop-Loss (SL)");
+            continue;
+          }
+        }
         renderPositions();
         updateMetricsUI();
-      }, 1500);
+      }, 1200);
     }
 
     function updateMetricsUI() {
@@ -335,7 +362,7 @@
       const tbody = document.getElementById('active-trades-body');
       tbody.innerHTML = '';
       if (activePositions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b;">No active trades open.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #64748b;">No active trades open.</td></tr>';
         return;
       }
       activePositions.forEach(pos => {
@@ -344,6 +371,8 @@
           <td>${pos.asset}</td>
           <td style="color:${pos.type==='BUY'?'#22c55e':'#ef4444'}; font-weight:bold;">${pos.type}</td>
           <td>${pos.lots}</td>
+          <td style="color:#22c55e; font-weight:bold;">+$${pos.tp.toFixed(2)}</td>
+          <td style="color:#ef4444; font-weight:bold;">$${pos.sl.toFixed(2)}</td>
           <td style="color:${pnlColor}; font-weight:bold;">${pos.pnl >= 0 ? '+' : ''}$${pos.pnl.toFixed(2)}</td>
           <td><button class="btn-close" onclick="closeTrade(${pos.id})">Close</button></td>
         </tr>`;
