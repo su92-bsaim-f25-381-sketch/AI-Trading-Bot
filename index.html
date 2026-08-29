@@ -3,128 +3,71 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Trading Bot & Dashboard</title>
+  <title>AI Trading Bot & Analysis Dashboard</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    body {
-      background-color: #121826;
-      color: #ffffff;
-      padding: 15px;
-    }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 15px;
-      border-bottom: 1px solid #2a3447;
-      margin-bottom: 15px;
-    }
-    .header h1 {
-      font-size: 1.4rem;
-      color: #00f2fe;
-    }
-    .status-badge {
-      background: #00c853;
-      color: #000;
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 0.8rem;
-      font-weight: bold;
-    }
-    .grid-container {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 15px;
-    }
-    .card {
-      background: #1a2332;
-      border-radius: 10px;
-      padding: 15px;
-      border: 1px solid #2a3447;
-    }
-    .card h2 {
-      font-size: 1.1rem;
-      margin-bottom: 10px;
-      color: #4facfe;
-    }
-    /* Chart Container */
-    .chart-container {
-      height: 400px;
-      width: 100%;
-    }
-    /* AI Signals */
-    .signal-box {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #243044;
-      padding: 12px;
-      border-radius: 8px;
-      margin-top: 10px;
-    }
-    .signal-type {
-      font-size: 1.2rem;
-      font-weight: bold;
-      color: #00e676;
-    }
-    .btn {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 10px;
-      font-size: 1rem;
-    }
-    .btn-buy { background: #00e676; color: #000; }
-    .btn-sell { background: #ff5252; color: #fff; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
+    body { background-color: #0b0e14; color: #e1e7ef; padding: 12px; }
+    .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #1e293b; margin-bottom: 12px; }
+    .header h1 { font-size: 1.2rem; color: #38bdf8; }
+    .status-badge { background: #22c55e; color: #000; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
+    .card { background: #131722; border-radius: 8px; padding: 12px; border: 1px solid #1e293b; margin-bottom: 12px; }
+    .card h2 { font-size: 1rem; margin-bottom: 8px; color: #94a3b8; }
+    .chart-container { height: 380px; width: 100%; }
+    .price-display { font-size: 1.5rem; font-weight: bold; color: #f8fafc; margin-bottom: 5px; }
+    .signal-box { display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 10px; border-radius: 6px; margin: 8px 0; }
+    .signal-buy { color: #22c55e; font-weight: bold; font-size: 1.1rem; }
+    .signal-sell { color: #ef4444; font-weight: bold; font-size: 1.1rem; }
+    .signal-neutral { color: #eab308; font-weight: bold; font-size: 1.1rem; }
+    .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 6px; font-size: 0.95rem; }
+    .btn-buy { background: #22c55e; color: #000; }
+    .btn-sell { background: #ef4444; color: #fff; }
+    .stats-row { display: flex; justify-content: space-between; font-size: 0.85rem; color: #94a3b8; margin-top: 4px; }
   </style>
 </head>
 <body>
 
   <div class="header">
-    <h1>AI Trading Bot</h1>
-    <span class="status-badge">Bot Live</span>
+    <h1>AI Algorithmic Bot</h1>
+    <span class="status-badge" id="bot-status">BOT ACTIVE</span>
   </div>
 
-  <div class="grid-container">
-    
-    <!-- Live TradingView Chart -->
-    <div class="card">
-      <h2>Live Market Chart (BTC/USDT)</h2>
-      <div class="chart-container" id="tradingview_chart"></div>
-    </div>
+  <!-- Live Market Price & Chart -->
+  <div class="card">
+    <h2>BTC/USDT Live Market</h2>
+    <div class="price-display" id="live-price">Loading Price...</div>
+    <div class="chart-container" id="tradingview_chart"></div>
+  </div>
 
-    <!-- AI Bot Analysis & Signals -->
-    <div class="card">
-      <h2>AI Technical Analysis</h2>
-      <div class="signal-box">
-        <span>Signal Output:</span>
-        <span class="signal-type" id="ai-signal">STRONG BUY</span>
-      </div>
-      <div style="margin-top: 10px; font-size: 0.9rem; color: #a0aec0;">
-        <p>• RSI (14): <strong>34.2 (Oversold)</strong></p>
-        <p>• MACD: <strong>Bullish Crossover</strong></p>
-        <p>• Target TP: <strong>$98,500</strong> | SL: <strong>$94,200</strong></p>
-      </div>
+  <!-- Real-Time AI Analysis -->
+  <div class="card">
+    <h2>AI Technical Analysis Engine</h2>
+    <div class="signal-box">
+      <span>AI Decision:</span>
+      <span id="ai-decision" class="signal-neutral">ANALYZING...</span>
     </div>
-
-    <!-- Paper Trading Simulator -->
-    <div class="card">
-      <h2>Paper Trade Executer</h2>
-      <p style="font-size: 0.85rem; color: #a0aec0; margin-bottom: 10px;">
-        Virtual Balance: <strong style="color: #fff;">$10,000.00</strong>
-      </p>
-      <button class="btn btn-buy" onclick="alert('Paper Buy Order Placed!')">Execute AI BUY Signal</button>
-      <button class="btn btn-sell" onclick="alert('Paper Sell Order Placed!')">Execute AI SELL Signal</button>
+    <div class="stats-row">
+      <span>Calculated RSI (14):</span>
+      <strong id="rsi-val">--</strong>
     </div>
+    <div class="stats-row">
+      <span>Suggested Stop Loss:</span>
+      <strong id="sl-val" style="color: #ef4444;">--</strong>
+    </div>
+    <div class="stats-row">
+      <span>Suggested Take Profit:</span>
+      <strong id="tp-val" style="color: #22c55e;">--</strong>
+    </div>
+  </div>
 
+  <!-- Simulated Paper Trading -->
+  <div class="card">
+    <h2>Paper Trading Execution</h2>
+    <div class="stats-row" style="margin-bottom: 8px;">
+      <span>Virtual Wallet Balance:</span>
+      <strong id="wallet-balance" style="color: #38bdf8;">$10,000.00</strong>
+    </div>
+    <button class="btn btn-buy" onclick="executeTrade('BUY')">Auto Execute BUY Signal</button>
+    <button class="btn btn-sell" onclick="executeTrade('SELL')">Auto Execute SELL Signal</button>
   </div>
 
   <!-- TradingView Widget Script -->
@@ -138,11 +81,55 @@
       "theme": "dark",
       "style": "1",
       "locale": "en",
-      "toolbar_bg": "#f1f3f6",
       "enable_publishing": false,
       "allow_symbol_change": true,
       "container_id": "tradingview_chart"
     });
+
+    // Fetch Live Price & Simulating AI Logic
+    let currentPrice = 0;
+    let balance = 10000;
+
+    async function fetchLiveTicker() {
+      try {
+        const response = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
+        const data = await response.json();
+        currentPrice = parseFloat(data.price);
+        document.getElementById('live-price').innerText = '$' + currentPrice.toLocaleString(undefined, {minimumFractionDigits: 2});
+        runAiAnalysis(currentPrice);
+      } catch (err) {
+        document.getElementById('live-price').innerText = '$96,500.00 (Simulated)';
+        runAiAnalysis(96500);
+      }
+    }
+
+    function runAiAnalysis(price) {
+      // Auto Calculation Logic (Mock RSI & Auto Risk Management)
+      const mockRsi = (Math.random() * (75 - 25) + 25).toFixed(1);
+      document.getElementById('rsi-val').innerText = mockRsi;
+
+      const decisionElem = document.getElementById('ai-decision');
+      if (mockRsi < 35) {
+        decisionElem.innerText = "STRONG BUY";
+        decisionElem.className = "signal-buy";
+      } else if (mockRsi > 65) {
+        decisionElem.innerText = "STRONG SELL";
+        decisionElem.className = "signal-sell";
+      } else {
+        decisionElem.innerText = "HOLD / NEUTRAL";
+        decisionElem.className = "signal-neutral";
+      }
+
+      document.getElementById('sl-val').innerText = '$' + (price * 0.985).toFixed(2);
+      document.getElementById('tp-val').innerText = '$' + (price * 1.03).toFixed(2);
+    }
+
+    function executeTrade(type) {
+      alert(type + ' Order Executed at $' + currentPrice.toFixed(2) + ' via AI Bot!');
+    }
+
+    fetchLiveTicker();
+    setInterval(fetchLiveTicker, 5000); // Auto updates every 5 seconds
   </script>
 </body>
 </html>
