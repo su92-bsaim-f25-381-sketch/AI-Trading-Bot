@@ -13,7 +13,6 @@
     .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #1e293b; margin-bottom: 10px; }
     .header h1 { font-size: 0.95rem; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
     
-    /* Live Binance Realtime Ticker Badge */
     .binance-live-badge { background: #1e293b; border: 1px solid #eab308; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; color: #eab308; display: flex; align-items: center; gap: 6px; }
     .pulse-dot { width: 8px; height: 8px; background-color: #22c55e; border-radius: 50%; display: inline-block; animation: blink 1s infinite; }
     @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
@@ -32,7 +31,6 @@
     .metric-card { background: #1e293b; padding: 8px; border-radius: 6px; text-align: center; }
     .metric-card label { font-size: 0.58rem; color: #94a3b8; display: block; margin-bottom: 2px; text-transform: uppercase; }
     .metric-card span { font-size: 0.85rem; font-weight: bold; }
-    .metric-card input { background: #0f172a; border: 1px solid #38bdf8; color: #38bdf8; text-align: center; font-weight: bold; font-size: 0.85rem; width: 100%; padding: 3px; border-radius: 4px; }
 
     .stat-card-top { background: #0f172a; border: 1px solid #1e293b; padding: 6px; border-radius: 6px; text-align: center; }
     .stat-card-top label { font-size: 0.58rem; color: #64748b; display: block; }
@@ -70,7 +68,7 @@
 </head>
 <body>
 
-  <!-- Top Header Bar with Binance Live WebSocket Status -->
+  <!-- Top Header Bar -->
   <div class="header">
     <h1>📈 TradePulse AI</h1>
     <div class="binance-live-badge">
@@ -88,8 +86,8 @@
 
   <div class="metrics-grid">
     <div class="metric-card">
-      <label>SET YOUR CAPITAL ($)</label>
-      <input type="number" id="input-total-capital" value="10000" oninput="updateCapitalFromInput()">
+      <label>TOTAL CAPITAL ($)</label>
+      <span id="display-total-cap" style="color: #38bdf8;">$10,000.00</span>
     </div>
     <div class="metric-card">
       <label>ACTIVE CAPITAL (50%)</label>
@@ -100,7 +98,7 @@
       <span id="display-backup-cap" style="color: #a855f7;">$5,000.00</span>
     </div>
     <div class="metric-card">
-      <label>MAX RISK/TRADE (2%)</label>
+      <label>MAX RISK/TRADE (1%)</label>
       <span id="display-risk-limit" style="color: #ef4444;">$100.00</span>
     </div>
   </div>
@@ -158,12 +156,16 @@
       <h2>Bot Real-Time Market Analysis Tracker</h2>
       <div class="scanner-display">
         <div class="scanner-row">
-          <span style="color:#94a3b8;">Currently Analyzing Chart:</span>
+          <span style="color:#94a3b8;">Currently Analyzing:</span>
           <span id="scan-symbol" style="color:#38bdf8; font-weight:bold;">BTC/USDT</span>
         </div>
         <div class="scanner-row">
-          <span style="color:#94a3b8;">Binance Direct Price:</span>
+          <span style="color:#94a3b8;">Binance Price:</span>
           <span id="scan-live-price" style="color:#22c55e; font-weight:bold;">Waiting...</span>
+        </div>
+        <div class="scanner-row">
+          <span style="color:#94a3b8;">Quant Metrics (RSI / ATR):</span>
+          <span id="scan-quant-metrics" style="color:#a855f7; font-weight:bold;">RSI: -- | ATR: --</span>
         </div>
       </div>
       <div class="ai-think-box" id="ai-reasoning">
@@ -189,7 +191,7 @@
             <th>Asset</th>
             <th>Type</th>
             <th>Lots</th>
-            <th>Live P&L ($)</th>
+            <th>Entry Price</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -221,34 +223,13 @@
   </div>
 
   <script>
+    const BACKEND_URL = "http://localhost:5000";
     let currentBinancePrice = 0.00;
+    let currentATR = 10.0;
     let binanceSocket = null;
-
-    // Direct Binance Nano-Second WebSocket Connection Function
-    function connectBinanceWebSocket(symbol = 'btcusdt') {
-      if (binanceSocket) {
-        binanceSocket.close();
-      }
-
-      const cleanSymbol = symbol.toLowerCase().replace('/', '').replace('binance:', '');
-      binanceSocket = new WebSocket(`wss://stream.binance.com:9443/ws/${cleanSymbol}@ticker`);
-
-      binanceSocket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data && data.c) {
-          currentBinancePrice = parseFloat(data.c);
-          const formattedPrice = `$${currentBinancePrice.toFixed(2)}`;
-          
-          document.getElementById('binance-live-price').innerText = formattedPrice;
-          const scanDisplay = document.getElementById('scan-live-price');
-          if(scanDisplay) scanDisplay.innerText = formattedPrice;
-        }
-      };
-
-      binanceSocket.onerror = (err) => {
-        console.error("Binance Socket Error:", err);
-      };
-    }
+    let isBotActive = false;
+    let botPollingInterval = null;
+    let lastExecutedSignalTime = 0;
 
     const assets = {
       crypto: [
@@ -266,10 +247,23 @@
       ]
     };
 
-    let totalCapital = 10000.00;
-    let isBotActive = false;
-    let activePositions = [];
-    let tradeHistory = [];
+    function connectBinanceWebSocket(symbol = 'btcusdt') {
+      if (binanceSocket) binanceSocket.close();
+
+      const cleanSymbol = symbol.toLowerCase().replace('/', '').replace('binance:', '');
+      binanceSocket = new WebSocket(`wss://stream.binance.com:9443/ws/${cleanSymbol}@ticker`);
+
+      binanceSocket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data && data.c) {
+          currentBinancePrice = parseFloat(data.c);
+          const formattedPrice = `$${currentBinancePrice.toFixed(2)}`;
+          document.getElementById('binance-live-price').innerText = formattedPrice;
+          const scanDisplay = document.getElementById('scan-live-price');
+          if(scanDisplay) scanDisplay.innerText = formattedPrice;
+        }
+      };
+    }
 
     function switchTab(tabId, btnElem) {
       document.querySelectorAll('.tab-content').forEach(t => {
@@ -285,9 +279,9 @@
       }
       btnElem.classList.add('active');
 
-      if(tabId === 'tab-terminal') {
-        loadTradingViewChart();
-      }
+      if(tabId === 'tab-terminal') loadTradingViewChart();
+      if(tabId === 'tab-trades') fetchActiveTrades();
+      if(tabId === 'tab-analytics') fetchTradeHistory();
     }
 
     function updateAssetDropdown() {
@@ -321,7 +315,6 @@
         "container_id": "tv_chart_container"
       });
 
-      // Connect Direct Binance Live Stream for the selected crypto asset
       connectBinanceWebSocket(currentSymbol.replace('BINANCE:', ''));
     }
 
@@ -330,47 +323,170 @@
       const label = document.getElementById('status-label');
       label.innerText = isBotActive ? "AUTO BOT ON" : "AUTO BOT OFF";
       label.style.color = isBotActive ? "#22c55e" : "#ef4444";
+
+      if (isBotActive) {
+        fetchMarketAnalysis(); // Immediate scan
+        botPollingInterval = setInterval(fetchMarketAnalysis, 3000); // Poll every 3 seconds
+      } else {
+        clearInterval(botPollingInterval);
+        document.getElementById('ai-reasoning').innerText = "[BOT SYSTEM LOG]: Auto Bot Paused.";
+      }
     }
 
-    function executeManualTrade(type) {
+    async function fetchMarketAnalysis() {
+      const symbolSelect = document.getElementById('symbol-select');
+      const rawSymbol = symbolSelect ? symbolSelect.value : "BTCUSDT";
+      
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/market?symbol=${rawSymbol}`);
+        const data = await res.json();
+
+        if (data.error) return;
+
+        currentATR = data.atr;
+        document.getElementById('scan-symbol').innerText = rawSymbol.replace('BINANCE:', '');
+        document.getElementById('scan-quant-metrics').innerText = `RSI: ${data.rsi} | ATR: $${data.atr} | EMA20: ${data.ema20}`;
+        
+        // Update Wallet Metrics
+        const balance = data.wallet_balance;
+        document.getElementById('display-total-cap').innerText = `$${balance.toFixed(2)}`;
+        document.getElementById('display-active-cap').innerText = `$${(balance * 0.5).toFixed(2)}`;
+        document.getElementById('display-backup-cap').innerText = `$${(balance * 0.5).toFixed(2)}`;
+        document.getElementById('display-risk-limit').innerText = `$${(balance * 0.01).toFixed(2)}`;
+
+        const reasoningBox = document.getElementById('ai-reasoning');
+        reasoningBox.innerHTML = `[QUANT SIGNAL]: <b>${data.signal}</b> | Price: $${data.price} | Support: $${data.support} | Resistance: $${data.resistance}<br>` +
+                                 `Buyer Pressure: ${data.buy_pressure}% | Recommended Lot: ${data.auto_lot}`;
+
+        // Auto Execution Engine Trigger
+        if (isBotActive && (data.suggested_action === 'BUY' || data.suggested_action === 'SELL')) {
+          const now = Date.now();
+          if (now - lastExecutedSignalTime > 30000) { // Cooldown of 30 seconds
+            lastExecutedSignalTime = now;
+            await sendExecuteTradeAPI(data.suggested_action, data.auto_lot, data.price, data.atr);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching market analysis:", err);
+      }
+    }
+
+    async function executeManualTrade(type) {
       const selectElem = document.getElementById('symbol-select');
       const assetName = selectElem.options[selectElem.selectedIndex] ? selectElem.options[selectElem.selectedIndex].text : "BTC/USDT";
       
-      const newTrade = {
-        id: Date.now(),
-        asset: assetName,
-        type: type,
-        lots: 0.10,
-        entryPrice: currentBinancePrice,
-        pnl: 0.00
-      };
-
-      activePositions.unshift(newTrade);
-      renderPositions();
+      await sendExecuteTradeAPI(type, 0.10, currentBinancePrice, currentATR, assetName);
     }
 
-    function renderPositions() {
+    async function sendExecuteTradeAPI(type, lots, price, atr, symbol = 'BTC/USDT') {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/trade/execute`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ symbol, type, lots, price, atr })
+        });
+        const result = await res.json();
+        if (result.status === 'SUCCESS') {
+          fetchActiveTrades();
+        }
+      } catch (err) {
+        console.error("Trade execution error:", err);
+      }
+    }
+
+    async function fetchActiveTrades() {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/trades/active`);
+        const data = await res.json();
+        renderActiveTrades(data.active_trades);
+      } catch (err) {
+        console.error("Error fetching active trades:", err);
+      }
+    }
+
+    function renderActiveTrades(trades) {
       const tbody = document.getElementById('active-trades-body');
       tbody.innerHTML = '';
-      if (activePositions.length === 0) {
+      if (!trades || trades.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b;">No active trades running.</td></tr>';
         return;
       }
-      activePositions.forEach(pos => {
+      trades.forEach(pos => {
         let row = `<tr>
-          <td>${pos.asset}</td>
+          <td>${pos.symbol}</td>
           <td style="color:${pos.type==='BUY'?'#22c55e':'#ef4444'}; font-weight:bold;">${pos.type}</td>
           <td>${pos.lots}</td>
-          <td style="color:#22c55e;">+$0.00</td>
-          <td><button class="btn-close" onclick="activePositions.shift(); renderPositions();">Close</button></td>
+          <td>$${pos.entry_price}</td>
+          <td><button class="btn-close" onclick="closeTradeAPI(${pos.id})">Close</button></td>
         </tr>`;
         tbody.innerHTML += row;
       });
     }
 
+    async function closeTradeAPI(tradeId) {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/trade/close`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: tradeId, exit_price: currentBinancePrice })
+        });
+        const data = await res.json();
+        if (data.status === 'SUCCESS') {
+          fetchActiveTrades();
+          fetchTradeHistory();
+        }
+      } catch (err) {
+        console.error("Error closing trade:", err);
+      }
+    }
+
+    async function fetchTradeHistory() {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/trades/history`);
+        const data = await res.json();
+        renderTradeHistory(data.closed_trades);
+      } catch (err) {
+        console.error("Error fetching trade history:", err);
+      }
+    }
+
+    function renderTradeHistory(trades) {
+      const tbody = document.getElementById('trade-history-body');
+      tbody.innerHTML = '';
+      if (!trades || trades.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b;">No history records found.</td></tr>';
+        return;
+      }
+
+      let winCount = 0;
+      let lossCount = 0;
+
+      trades.forEach(t => {
+        if (t.pnl >= 0) winCount++; else lossCount++;
+        let pnlColor = t.pnl >= 0 ? '#22c55e' : '#ef4444';
+        let row = `<tr>
+          <td>${t.close_time}</td>
+          <td>${t.symbol}</td>
+          <td style="color:${t.type==='BUY'?'#22c55e':'#ef4444'}; font-weight:bold;">${t.type}</td>
+          <td>${t.lots}</td>
+          <td style="color:${pnlColor}; font-weight:bold;">${t.pnl >= 0 ? '+' : ''}$${t.pnl.toFixed(2)}</td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+
+      // Update Win/Loss Stats
+      const total = trades.length;
+      const winRatio = total > 0 ? ((winCount / total) * 100).toFixed(1) : "0.0";
+      document.getElementById('top-total-trades').innerText = total;
+      document.getElementById('top-win-trades').innerText = winCount;
+      document.getElementById('top-loss-trades').innerText = lossCount;
+      document.getElementById('top-win-ratio').innerText = `${winRatio}%`;
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
       updateAssetDropdown();
       connectBinanceWebSocket('BTCUSDT');
+      fetchActiveTrades();
     });
   </script>
 </body>
