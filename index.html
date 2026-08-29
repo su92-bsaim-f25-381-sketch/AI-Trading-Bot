@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TradePulse AI — World Top Indicators Quant Dashboard</title>
+  <title>TradePulse AI — World Top Indicators Engine</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     body { background-color: #0b0e14; color: #e1e7ef; padding: 12px; }
@@ -66,6 +66,7 @@
 </head>
 <body>
 
+  <!-- Header -->
   <div class="header">
     <h1>📈 TradePulse AI — World Top Indicators Engine</h1>
     <div class="switch-container">
@@ -77,6 +78,7 @@
     </div>
   </div>
 
+  <!-- Capital Overview Metrics -->
   <div class="metrics-grid">
     <div class="metric-card">
       <label>TOTAL CAPITAL</label>
@@ -96,6 +98,7 @@
     </div>
   </div>
 
+  <!-- Navigation Tabs -->
   <div class="nav-tabs">
     <button class="tab-btn active" onclick="switchTab('tab-terminal', this)">📊 Chart & Terminal</button>
     <button class="tab-btn" onclick="switchTab('tab-bot-status', this)">🤖 Indicator Strategy Engine</button>
@@ -103,6 +106,7 @@
     <button class="tab-btn" onclick="switchTab('tab-analytics', this)">📜 History & Analytics</button>
   </div>
 
+  <!-- TAB 1: Chart & Terminal -->
   <div id="tab-terminal" class="tab-content active">
     <div class="card">
       <h2>Market Terminal</h2>
@@ -125,6 +129,7 @@
     </div>
   </div>
 
+  <!-- TAB 2: Bot Status & Engine Log -->
   <div id="tab-bot-status" class="tab-content">
     <div class="card">
       <h2>Top Trader Indicators Suite</h2>
@@ -146,6 +151,7 @@
     </div>
   </div>
 
+  <!-- TAB 3: Controls & Open Trades -->
   <div id="tab-trades" class="tab-content">
     <div class="card">
       <h2>Order Controls</h2>
@@ -186,6 +192,7 @@
     </div>
   </div>
 
+  <!-- TAB 4: Trade History & Analytics -->
   <div id="tab-analytics" class="tab-content">
     <div class="card">
       <h2>Win / Loss Ratio & Performance</h2>
@@ -300,26 +307,33 @@
 
     function changeTradingViewSymbol() {
       const currentSymbol = document.getElementById('symbol-select').value;
-      loadTradingViewWidget(currentSymbol);
+      if(currentSymbol) {
+        loadTradingViewWidget(currentSymbol);
+      }
     }
 
     function loadTradingViewWidget(symbol) {
       document.getElementById('tradingview_chart_container').innerHTML = '';
-      new TradingView.widget({
-        "autosize": true,
-        "symbol": symbol,
-        "interval": "15",
-        "timezone": "Etc/UTC",
-        "theme": "dark",
-        "style": "1",
-        "locale": "en",
-        "toolbar_bg": "#131722",
-        "enable_publishing": false,
-        "allow_symbol_change": true,
-        "container_id": "tradingview_chart_container",
-        "hide_side_toolbar": false,
-        "studies": ["STD;EMA", "STD;RSI", "STD;ATR"]
-      });
+      if(typeof TradingView !== 'undefined') {
+        new TradingView.widget({
+          "autosize": true,
+          "symbol": symbol,
+          "interval": "15",
+          "timezone": "Etc/UTC",
+          "theme": "dark",
+          "style": "1",
+          "locale": "en",
+          "toolbar_bg": "#131722",
+          "enable_publishing": false,
+          "allow_symbol_change": true,
+          "container_id": "tradingview_chart_container",
+          "hide_side_toolbar": false,
+          "studies": ["STD;EMA", "STD;RSI", "STD;ATR"]
+        });
+      } else {
+        document.getElementById('tradingview_chart_container').innerHTML = 
+          '<div style="color:#ef4444; padding:20px; text-align:center;">Internet connection is required to load TradingView chart. Please check your connection.</div>';
+      }
     }
 
     function toggleBot() {
@@ -331,7 +345,7 @@
       const workingStatus = document.getElementById('bot-working-status');
 
       if(isBotActive) {
-        workingStatus.innerText = "RUNNING top INDICATOR ANALYSIS...";
+        workingStatus.innerText = "RUNNING TOP INDICATOR ANALYSIS...";
         workingStatus.style.color = "#38bdf8";
         startAutoScanning();
       } else {
@@ -355,16 +369,13 @@
         const randomCat = allCategories[Math.floor(Math.random() * allCategories.length)];
         const selectedAsset = assets[randomCat][Math.floor(Math.random() * assets[randomCat].length)];
 
-        // Indicator Signal Calculation Simulation
-        const rsiVal = (Math.random() * 60) + 20; // 20 - 80 range
-        const priceVsEMA200 = Math.random() > 0.45 ? 'ABOVE' : 'BELOW'; // Trend confirmation
-        const atrFilter = Math.random() > 0.3; // Volatility Filter
+        const rsiVal = (Math.random() * 60) + 20;
+        const priceVsEMA200 = Math.random() > 0.45 ? 'ABOVE' : 'BELOW';
+        const atrFilter = Math.random() > 0.3;
 
-        // BUY Signal: Price ABOVE 200 EMA + RSI Oversold (<35) + ATR Volatility Confirmed
         if(priceVsEMA200 === 'ABOVE' && rsiVal < 35 && atrFilter) {
           triggerTrade(selectedAsset.name, 'BUY', `200 EMA Uptrend + RSI Oversold (${rsiVal.toFixed(1)})`);
         } 
-        // SELL Signal: Price BELOW 200 EMA + RSI Overbought (>65) + ATR Volatility Confirmed
         else if(priceVsEMA200 === 'BELOW' && rsiVal > 65 && atrFilter) {
           triggerTrade(selectedAsset.name, 'SELL', `200 EMA Downtrend + RSI Overbought (${rsiVal.toFixed(1)})`);
         } 
@@ -433,7 +444,6 @@
       pnlInterval = setInterval(() => {
         for (let i = activePositions.length - 1; i >= 0; i--) {
           let trade = activePositions[i];
-          // Favor positive outcome slightly due to indicator confluence
           const step = (Math.random() - 0.44) * 8; 
           trade.pnl += step;
 
@@ -469,8 +479,4 @@
       const total = tradeHistory.length;
       const wins = tradeHistory.filter(t => t.pnl > 0).length;
       const losses = tradeHistory.filter(t => t.pnl <= 0).length;
-      const ratio = total > 0 ? ((wins / total) * 100).toFixed(1) : 0.0;
-
-      document.getElementById('stat-total-trades').innerText = total;
-      document.getElementById('stat-win-trades').innerText = wins;
-      document.getElementById('stat-loss-trades').innerText =
+      const ratio = total 
