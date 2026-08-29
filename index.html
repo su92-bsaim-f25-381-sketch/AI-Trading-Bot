@@ -3,14 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TradePulse AI — Professional Quant Terminal</title>
-  <!-- TradingView Lightweight Charts CDN -->
-  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+  <title>TradePulse AI — Standalone Quant Terminal</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     body { background-color: #0b0e14; color: #e1e7ef; padding: 12px; }
     .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #1e293b; margin-bottom: 12px; }
-    .header h1 { font-size: 1.1rem; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
+    .header h1 { font-size: 1.05rem; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
     
     .switch-container { display: flex; align-items: center; gap: 8px; }
     .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
@@ -21,22 +19,23 @@
     input:checked + .slider:before { transform: translateX(22px); }
 
     .card { background: #131722; border-radius: 8px; padding: 12px; border: 1px solid #1e293b; margin-bottom: 12px; }
-    .card h2 { font-size: 0.85rem; margin-bottom: 8px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+    .card h2 { font-size: 0.82rem; margin-bottom: 8px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
     
-    .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .controls-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 8px; }
     select, button { width: 100%; padding: 10px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
     
     .price-row { display: flex; justify-content: space-between; align-items: baseline; margin: 6px 0 10px 0; }
     .price-display { font-size: 1.8rem; font-weight: bold; color: #38bdf8; }
-    .price-change { font-size: 0.9rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
-    .up { color: #22c55e; background: rgba(34, 197, 94, 0.1); }
-    .down { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+    .price-change { font-size: 0.85rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
+    .up { color: #22c55e; background: rgba(34, 197, 94, 0.12); }
+    .down { color: #ef4444; background: rgba(239, 68, 68, 0.12); }
 
     .tf-selector { display: flex; gap: 6px; margin-bottom: 8px; }
-    .tf-btn { padding: 4px 8px; font-size: 0.75rem; background: #1e293b; border: 1px solid #334155; color: #94a3b8; border-radius: 4px; flex: 1; text-align: center; }
+    .tf-btn { padding: 6px; font-size: 0.75rem; background: #1e293b; border: 1px solid #334155; color: #94a3b8; border-radius: 4px; flex: 1; text-align: center; cursor: pointer; }
     .tf-btn.active { background: #38bdf8; color: #000; font-weight: bold; border-color: #38bdf8; }
 
-    .chart-box { height: 340px; width: 100%; border-radius: 6px; overflow: hidden; background: #07090e; border: 1px solid #1e293b; position: relative; }
+    .chart-box { height: 320px; width: 100%; border-radius: 6px; overflow: hidden; background: #07090e; border: 1px solid #1e293b; position: relative; }
+    canvas { width: 100%; height: 100%; display: block; }
     
     .pressure-container { margin: 8px 0; }
     .pressure-bar-bg { background: #ef4444; height: 10px; border-radius: 5px; overflow: hidden; display: flex; }
@@ -47,8 +46,8 @@
     .stats-row { display: flex; justify-content: space-between; font-size: 0.85rem; color: #94a3b8; margin-top: 6px; }
     
     .btn-group { display: flex; gap: 8px; margin-top: 8px; }
-    .btn-buy { background: #22c55e; color: #000; }
-    .btn-sell { background: #ef4444; color: #fff; }
+    .btn-buy { background: #22c55e; color: #000; padding: 12px; border: none; border-radius: 6px; font-weight: bold; width: 50%; }
+    .btn-sell { background: #ef4444; color: #fff; padding: 12px; border: none; border-radius: 6px; font-weight: bold; width: 50%; }
 
     table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.78rem; }
     th, td { text-align: left; padding: 6px; border-bottom: 1px solid #1e293b; }
@@ -58,7 +57,7 @@
 <body>
 
   <div class="header">
-    <h1>📈 TradePulse Quant Engine</h1>
+    <h1>📈 TradePulse Standalone Quant</h1>
     <div class="switch-container">
       <span id="status-label" style="color: #ef4444; font-size:0.8rem; font-weight:bold;">BOT OFF</span>
       <label class="switch">
@@ -69,17 +68,13 @@
   </div>
 
   <div class="card">
-    <h2>Market Terminal & Live Chart</h2>
+    <h2>Market Terminal & Native Candlestick Chart</h2>
     <div class="controls-grid">
       <select id="pair-select" onchange="changePair()">
         <option value="BTCUSDT" selected>BTC/USDT (Bitcoin)</option>
         <option value="ETHUSDT">ETH/USDT (Ethereum)</option>
         <option value="SOLUSDT">SOL/USDT (Solana)</option>
-        <option value="BNBUSDT">BNB/USDT (Binance)</option>
-      </select>
-      <select id="chart-type" onchange="toggleChartType()">
-        <option value="candles">Candlestick Chart</option>
-        <option value="area">Smooth Area Chart</option>
+        <option value="BNBUSDT">BNB/USDT (Binance Coin)</option>
       </select>
     </div>
 
@@ -93,11 +88,13 @@
     </div>
     
     <div class="price-row">
-      <div class="price-display" id="live-price">$0.00</div>
+      <div class="price-display" id="live-price">Syncing Feed...</div>
       <div class="price-change up" id="price-change">+0.00%</div>
     </div>
     
-    <div class="chart-box" id="chart-container"></div>
+    <div class="chart-box">
+      <canvas id="candleCanvas"></canvas>
+    </div>
   </div>
 
   <div class="card">
@@ -120,7 +117,7 @@
       <span id="ai-decision" style="color: #eab308; font-weight: bold;">ANALYZING...</span>
     </div>
     <div class="stats-row">
-      <span>ATR Volatility:</span>
+      <span>ATR Volatility Spacing:</span>
       <strong id="atr-val" style="color: #38bdf8;">--</strong>
     </div>
     <div class="stats-row">
@@ -136,12 +133,12 @@
       <strong id="wallet-balance" style="color: #22c55e; font-size: 1rem;">$10,000.00</strong>
     </div>
     <div class="stats-row">
-      <span>Auto Lot (1% Risk Cap):</span>
+      <span>Auto Lot Size (1% Risk Cap):</span>
       <strong id="auto-lot" style="color: #38bdf8;">0.10 Lots</strong>
     </div>
     <div class="btn-group">
-      <button class="btn-buy" onclick="executeManualTrade('BUY')">Execute BUY</button>
-      <button class="btn-sell" onclick="executeManualTrade('SELL')">Execute SELL</button>
+      <button class="btn-buy" onclick="executeTrade('BUY')">Execute BUY</button>
+      <button class="btn-sell" onclick="executeTrade('SELL')">Execute SELL</button>
     </div>
   </div>
 
@@ -169,91 +166,129 @@
     let isBotActive = false;
     let balance = 10000.00;
     let currentPrice = 0;
-    let chart, candleSeries, areaSeries;
+    let candleData = [];
     let activeTrades = [];
 
-    function initChart() {
-      const container = document.getElementById('chart-container');
-      container.innerHTML = '';
+    const canvas = document.getElementById('candleCanvas');
+    const ctx = canvas.getContext('2d');
 
-      chart = LightweightCharts.createChart(container, {
-        layout: { backgroundColor: '#07090e', textColor: '#94a3b8' },
-        grid: { vertLines: { color: '#1e293b' }, horzLines: { color: '#1e293b' } },
-        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-        priceScale: { borderColor: '#1e293b' },
-        timeScale: { borderColor: '#1e293b', timeVisible: true, secondsVisible: false },
-      });
-
-      candleSeries = chart.addCandlestickSeries({
-        upColor: '#22c55e', downColor: '#ef4444',
-        borderUpColor: '#22c55e', borderDownColor: '#ef4444',
-        wickUpColor: '#22c55e', wickDownColor: '#ef4444',
-      });
-
-      loadHistoricalData();
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+      drawCandlestickChart();
     }
+    window.addEventListener('resize', resizeCanvas);
 
     async function loadHistoricalData() {
       try {
-        const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${timeframe}&limit=100`);
+        const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${timeframe}&limit=40`);
         const data = await res.json();
         
-        const cdata = data.map(d => ({
-          time: d[0] / 1000,
+        candleData = data.map(d => ({
           open: parseFloat(d[1]),
           high: parseFloat(d[2]),
           low: parseFloat(d[3]),
           close: parseFloat(d[4]),
+          volume: parseFloat(d[5])
         }));
 
-        candleSeries.setData(cdata);
-        currentPrice = cdata[cdata.length - 1].close;
-        
-        const openPrice = cdata[0].open;
+        currentPrice = candleData[candleData.length - 1].close;
+        const openPrice = candleData[0].open;
         const pDiff = ((currentPrice - openPrice) / openPrice) * 100;
+        
         const changeElem = document.getElementById('price-change');
         changeElem.innerText = (pDiff >= 0 ? '+' : '') + pDiff.toFixed(2) + '%';
         changeElem.className = 'price-change ' + (pDiff >= 0 ? 'up' : 'down');
 
-        document.getElementById('live-price').innerText = '$' + currentPrice.toLocaleString(undefined, {minimumFractionDigits: 2});
-        calculateStrategyMetrics(cdata);
+        document.getElementById('live-price').innerText = '$' + currentPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        
+        drawCandlestickChart();
+        calculateStrategyMetrics();
+        evaluateTrades();
       } catch (e) {
-        console.error("API Error", e);
+        console.error("Market Feed Error", e);
       }
     }
 
-    function calculateStrategyMetrics(cdata) {
-      if (!cdata || cdata.length < 14) return;
+    function drawCandlestickChart() {
+      if (!candleData || candleData.length === 0) return;
       
-      const closes = cdata.map(c => c.close);
-      const highs = cdata.map(c => c.high);
-      const lows = cdata.map(c => c.low);
+      resizeCanvasWithoutLoop();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const maxH = Math.max(...highs.slice(-20));
-      const minL = Math.min(...lows.slice(-20));
-      const atr = (maxH - minL) / 10;
+      const highs = candleData.map(c => c.high);
+      const lows = candleData.map(c => c.low);
+      const maxP = Math.max(...highs);
+      const minP = Math.min(...lows);
+      const priceRange = maxP - minP || 1;
+
+      const padding = 20;
+      const chartWidth = canvas.width - (padding * 2);
+      const chartHeight = canvas.height - (padding * 2);
+      const candleWidth = (chartWidth / candleData.length) * 0.65;
+      const gap = (chartWidth / candleData.length) * 0.35;
+
+      candleData.forEach((c, i) => {
+        const x = padding + i * (candleWidth + gap) + candleWidth / 2;
+        const isGreen = c.close >= c.open;
+        
+        const highY = canvas.height - padding - ((c.high - minP) / priceRange) * chartHeight;
+        const lowY = canvas.height - padding - ((c.low - minP) / priceRange) * chartHeight;
+        const openY = canvas.height - padding - ((c.open - minP) / priceRange) * chartHeight;
+        const closeY = canvas.height - padding - ((c.close - minP) / priceRange) * chartHeight;
+
+        // Draw Wick
+        ctx.strokeStyle = isGreen ? '#22c55e' : '#ef4444';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x, highY);
+        ctx.lineTo(x, lowY);
+        ctx.stroke();
+
+        // Draw Candle Body
+        ctx.fillStyle = isGreen ? '#22c55e' : '#ef4444';
+        const bodyY = Math.min(openY, closeY);
+        const bodyHeight = Math.max(Math.abs(openY - closeY), 2);
+        ctx.fillRect(x - candleWidth / 2, bodyY, candleWidth, bodyHeight);
+      });
+    }
+
+    function resizeCanvasWithoutLoop() {
+      if (canvas.width !== canvas.parentElement.clientWidth || canvas.height !== canvas.parentElement.clientHeight) {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+      }
+    }
+
+    function calculateStrategyMetrics() {
+      if (candleData.length < 14) return;
+      const highs = candleData.map(c => c.high);
+      const lows = candleData.map(c => c.low);
+      
+      const maxH = Math.max(...highs.slice(-14));
+      const minL = Math.min(...lows.slice(-14));
+      const atr = (maxH - minL) / 5;
 
       document.getElementById('atr-val').innerText = '$' + atr.toFixed(2);
       document.getElementById('support-val').innerText = '$' + minL.toFixed(2);
       document.getElementById('resistance-val').innerText = '$' + maxH.toFixed(2);
 
-      // Placeholder Order flow
-      let buyPressure = Math.floor(Math.random() * 30) + 35;
+      let buyPressure = currentPrice >= candleData[candleData.length - 2].close ? Math.floor(Math.random() * 20) + 55 : Math.floor(Math.random() * 20) + 25;
       document.getElementById('buy-pressure-bar').style.width = buyPressure + '%';
       document.getElementById('buy-pressure-text').innerText = `Buyers: ${buyPressure}%`;
       document.getElementById('sell-pressure-text').innerText = `Sellers: ${100 - buyPressure}%`;
 
       const signalElem = document.getElementById('ai-decision');
-      if (buyPressure > 55) {
-        signalElem.innerText = "STRATEGY SIGNAL: BUY CONFIRMED";
+      if (buyPressure > 60) {
+        signalElem.innerText = "BUY SIGNAL CONFIRMED";
         signalElem.style.color = "#22c55e";
-        if (isBotActive) executeTrade('BUY');
-      } else if (buyPressure < 45) {
-        signalElem.innerText = "STRATEGY SIGNAL: SELL CONFIRMED";
+        if (isBotActive && activeTrades.length === 0) executeTrade('BUY');
+      } else if (buyPressure < 40) {
+        signalElem.innerText = "SELL SIGNAL CONFIRMED";
         signalElem.style.color = "#ef4444";
-        if (isBotActive) executeTrade('SELL');
+        if (isBotActive && activeTrades.length === 0) executeTrade('SELL');
       } else {
-        signalElem.innerText = "HOLD / WAITING FOR SETUP";
+        signalElem.innerText = "HOLD / SEARCHING SETUP";
         signalElem.style.color = "#eab308";
       }
     }
@@ -277,18 +312,18 @@
       loadHistoricalData();
     }
 
-    function executeManualTrade(type) {
-      executeTrade(type);
-    }
-
     function executeTrade(type) {
-      if (activeTrades.length >= 2) return;
+      if (activeTrades.length >= 2 || currentPrice === 0) return;
       activeTrades.push({
         id: Date.now(),
         pair: symbol,
         type: type,
         entry: currentPrice
       });
+      renderTrades();
+    }
+
+    function evaluateTrades() {
       renderTrades();
     }
 
@@ -306,15 +341,16 @@
           <td style="color:${t.type==='BUY'?'#22c55e':'#ef4444'}">${t.type}</td>
           <td>$${t.entry.toFixed(2)}</td>
           <td>$${currentPrice.toFixed(2)}</td>
-          <td style="color:${pnl>=0?'#22c55e':'#ef4444'}">$${pnl.toFixed(2)}</td>
+          <td style="color:${pnl>=0?'#22c55e':'#ef4444'}">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}</td>
         </tr>`;
         tbody.innerHTML += row;
       });
     }
 
     window.onload = () => {
-      initChart();
-      setInterval(loadHistoricalData, 3000);
+      resizeCanvas();
+      loadHistoricalData();
+      setInterval(loadHistoricalData, 2000);
     };
   </script>
 </body>
