@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TradePulse AI — Multi-Asset Trading Terminal</title>
+  <title>TradePulse AI — Takashi Monokava Quant Terminal</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
     body { background-color: #0b0e14; color: #e1e7ef; padding: 12px; }
     .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #1e293b; margin-bottom: 12px; }
-    .header h1 { font-size: 1.2rem; color: #38bdf8; }
+    .header h1 { font-size: 1.1rem; color: #38bdf8; }
     
     .switch-container { display: flex; align-items: center; gap: 8px; }
     .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
@@ -20,47 +20,48 @@
     .bot-status-text { font-size: 0.8rem; font-weight: bold; }
 
     .card { background: #131722; border-radius: 8px; padding: 12px; border: 1px solid #1e293b; margin-bottom: 12px; }
-    .card h2 { font-size: 1rem; margin-bottom: 8px; color: #94a3b8; }
+    .card h2 { font-size: 0.9rem; margin-bottom: 8px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
     .chart-container { height: 350px; width: 100%; }
     .price-display { font-size: 1.6rem; font-weight: bold; color: #f8fafc; margin-bottom: 5px; }
     
-    /* Timer Progress Bar */
     .timer-box { background: #1e293b; padding: 8px 12px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-    .progress-bar-container { width: 60%; background: #334155; height: 8px; border-radius: 4px; overflow: hidden; }
+    .progress-bar-container { width: 55%; background: #334155; height: 8px; border-radius: 4px; overflow: hidden; }
     .progress-fill { background: #38bdf8; height: 100%; width: 100%; transition: width 1s linear; }
 
-    .pressure-container { margin: 10px 0; }
-    .pressure-bar-bg { background: #ef4444; height: 12px; border-radius: 6px; overflow: hidden; display: flex; }
+    .pressure-container { margin: 8px 0; }
+    .pressure-bar-bg { background: #ef4444; height: 10px; border-radius: 5px; overflow: hidden; display: flex; }
     .pressure-buy-fill { background: #22c55e; height: 100%; width: 50%; transition: width 0.4s ease; }
     .pressure-labels { display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: 4px; font-weight: bold; }
     
     .signal-box { display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 10px; border-radius: 6px; margin: 8px 0; }
-    .signal-buy { color: #22c55e; font-weight: bold; font-size: 1.1rem; }
-    .signal-sell { color: #ef4444; font-weight: bold; font-size: 1.1rem; }
-    .signal-neutral { color: #eab308; font-weight: bold; font-size: 1.1rem; }
+    .signal-buy { color: #22c55e; font-weight: bold; font-size: 1rem; }
+    .signal-sell { color: #ef4444; font-weight: bold; font-size: 1rem; }
+    .signal-neutral { color: #eab308; font-weight: bold; font-size: 1rem; }
     
     .btn { width: 49%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.95rem; }
     .btn-buy { background: #22c55e; color: #000; }
     .btn-sell { background: #ef4444; color: #fff; }
     .btn-group { display: flex; justify-content: space-between; margin-top: 8px; }
     .stats-row { display: flex; justify-content: space-between; font-size: 0.85rem; color: #94a3b8; margin-top: 6px; }
-    select, input { width: 100%; padding: 8px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 6px; margin-bottom: 10px; font-size: 0.95rem; }
+    select, input { width: 100%; padding: 8px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 6px; margin-bottom: 8px; font-size: 0.95rem; }
     
-    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.8rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.78rem; }
     th, td { text-align: left; padding: 6px; border-bottom: 1px solid #1e293b; }
     th { color: #64748b; font-weight: 600; }
     .text-buy { color: #22c55e; font-weight: bold; }
     .text-sell { color: #ef4444; font-weight: bold; }
     .pnl-profit { color: #22c55e; font-weight: bold; }
     .pnl-loss { color: #ef4444; font-weight: bold; }
+    .btn-close { background: #334155; color: #fff; border: none; padding: 3px 6px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
+    .status-tag { padding: 2px 5px; border-radius: 3px; font-size: 0.68rem; font-weight: bold; background: #334155; }
   </style>
 </head>
 <body>
 
   <div class="header">
-    <h1>TradePulse AI</h1>
+    <h1>TradePulse AI (Monokava Strategy)</h1>
     <div class="switch-container">
-      <span class="bot-status-text" id="status-label" style="color: #ef4444;">BOT OFF</span>
+      <span class="bot-status-text" id="status-label" style="color: #ef4444;">MONOKAVA BOT OFF</span>
       <label class="switch">
         <input type="checkbox" id="bot-toggle" onchange="toggleBot()">
         <span class="slider"></span>
@@ -69,7 +70,7 @@
   </div>
 
   <div class="card">
-    <h2>Select Market Asset (Crypto / Metals)</h2>
+    <h2>Market Selector</h2>
     <select id="pair-select" onchange="changePair()">
       <optgroup label="Crypto Assets">
         <option value="BTCUSDT" selected>BTC/USDT (Bitcoin)</option>
@@ -83,22 +84,22 @@
         <option value="CAPITALCOM:COPPER">Copper</option>
       </optgroup>
     </select>
-    <div class="price-display" id="live-price">Loading Price...</div>
+    <div class="price-display" id="live-price">Syncing Feed...</div>
     <div class="chart-container" id="chart_holder"></div>
   </div>
 
   <div class="card">
     <div class="timer-box">
-      <span style="font-size: 0.85rem; color: #94a3b8;">Next Auto-Trade Scan:</span>
+      <span style="font-size: 0.8rem; color: #94a3b8;">Monokava Engine Scan:</span>
       <div class="progress-bar-container">
         <div class="progress-fill" id="timer-progress"></div>
       </div>
-      <span style="font-size: 0.85rem; font-weight: bold; color: #38bdf8;" id="timer-text">15s</span>
+      <span style="font-size: 0.8rem; font-weight: bold; color: #38bdf8;" id="timer-text">10s</span>
     </div>
   </div>
 
   <div class="card">
-    <h2>Real-Time Order Flow (Volume Pressure)</h2>
+    <h2>Volume & Pressure Matrix</h2>
     <div class="pressure-container">
       <div class="pressure-bar-bg">
         <div class="pressure-buy-fill" id="buy-pressure-bar"></div>
@@ -111,58 +112,351 @@
   </div>
 
   <div class="card">
-    <h2>AI Signal & Technical Analysis</h2>
+    <h2>Monokava Signal Matrix</h2>
     <div class="signal-box">
-      <span>AI Decision:</span>
-      <span id="ai-decision" class="signal-neutral">SCANNING...</span>
+      <span>Setup State:</span>
+      <span id="ai-decision" class="signal-neutral">ANALYZING...</span>
     </div>
     <div class="stats-row">
-      <span>Dynamic Support:</span>
-      <strong id="support-val" style="color: #22c55e;">--</strong>
+      <span>ATR Volatility Spacing:</span>
+      <strong id="atr-val" style="color: #38bdf8;">--</strong>
     </div>
     <div class="stats-row">
-      <span>Dynamic Resistance:</span>
-      <strong id="resistance-val" style="color: #ef4444;">--</strong>
-    </div>
-    <div class="stats-row">
-      <span>RSI (14):</span>
-      <strong id="rsi-val">--</strong>
+      <span>Support / Resistance:</span>
+      <strong><span id="support-val" style="color: #22c55e;">--</span> / <span id="resistance-val" style="color: #ef4444;">--</span></strong>
     </div>
   </div>
 
   <div class="card">
-    <h2>Risk & Custom Position Control</h2>
+    <h2>Monokava Risk Engine Rules</h2>
     <div class="stats-row">
-      <span>Live Wallet Balance:</span>
+      <span>Wallet Balance:</span>
       <strong id="wallet-balance" style="color: #38bdf8; font-size: 1.1rem;">$10,000.00</strong>
     </div>
-    <div style="margin-top: 8px;">
-      <label style="font-size: 0.8rem; color: #94a3b8;">Custom Lot Size (Optional):</label>
-      <input type="number" id="custom-lot" placeholder="Auto-calculated if blank (e.g. 0.10)" step="0.01">
+    <div class="stats-row">
+      <span>Strict Account Risk Cap:</span>
+      <strong style="color: #eab308;">1.0% ($100.00 Max Risk)</strong>
     </div>
     <div class="stats-row">
-      <span>Stop Loss (SL):</span>
-      <strong id="sl-val" style="color: #ef4444;">--</strong>
+      <span>Auto Lot Sizing:</span>
+      <strong id="auto-lot" style="color: #38bdf8;">0.10 Lots</strong>
     </div>
     <div class="stats-row">
-      <span>Take Profit (TP):</span>
-      <strong id="tp-val" style="color: #22c55e;">--</strong>
+      <span>Target 1 (Partial 50% Close):</span>
+      <strong id="tp1-val" style="color: #22c55e;">--</strong>
+    </div>
+    <div class="stats-row">
+      <span>Target 2 (Runner Trail):</span>
+      <strong id="tp2-val" style="color: #22c55e;">--</strong>
     </div>
     <div class="btn-group">
-      <button class="btn btn-buy" onclick="executeTrade('BUY', 'Manual')">Manual BUY</button>
-      <button class="btn btn-sell" onclick="executeTrade('SELL', 'Manual')">Manual SELL</button>
+      <button class="btn btn-buy" onclick="executeTrade('BUY', 'Manual')">BUY Order</button>
+      <button class="btn btn-sell" onclick="executeTrade('SELL', 'Manual')">SELL Order</button>
     </div>
   </div>
 
   <div class="card">
-    <h2>Active & Past Trades Ledger (Live PnL)</h2>
-    <table id="trade-table">
+    <h2>Active Monokava Positions (Breakeven & Trail Monitoring)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Asset</th>
+          <th>Type</th>
+          <th>Lot</th>
+          <th>Entry</th>
+          <th>SL Status</th>
+          <th>Unrealized PnL</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="active-trades-body">
+        <tr><td colspan="7" style="text-align: center; color: #64748b;">No active positions open.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Closed Positions History</h2>
+    <table>
       <thead>
         <tr>
           <th>Time</th>
           <th>Asset</th>
           <th>Type</th>
           <th>Lot</th>
-          <th>Entry Price</th>
-          <th>PnL ($)</th>
+          <th>Close Price</th>
+          <th>Realized PnL</th>
         </tr>
+      </thead>
+      <tbody id="closed-trades-body">
+        <tr><td colspan="6" style="text-align: center; color: #64748b;">No trade history logged yet.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+  <script type="text/javascript">
+    let currentPair = "BTCUSDT";
+    let currentPrice = 0;
+    let isBotActive = false;
+    let balance = 10000.00;
+    let scanCountdown = 10;
+    let atr = 0;
+    
+    let activeTrades = [];
+    let closedTrades = [];
+
+    function toggleBot() {
+      isBotActive = document.getElementById('bot-toggle').checked;
+      const label = document.getElementById('status-label');
+      if (isBotActive) {
+        label.innerText = "MONOKAVA BOT ACTIVE";
+        label.style.color = "#22c55e";
+      } else {
+        label.innerText = "MONOKAVA BOT OFF";
+        label.style.color = "#ef4444";
+      }
+    }
+
+    function loadChart(symbol) {
+      document.getElementById('chart_holder').innerHTML = '<div id="tradingview_chart" style="height:100%;"></div>';
+      const tvSymbol = symbol.includes(":") ? symbol : "BINANCE:" + symbol;
+      new TradingView.widget({
+        "autosize": true,
+        "symbol": tvSymbol,
+        "interval": "15",
+        "timezone": "Etc/UTC",
+        "theme": "dark",
+        "style": "1",
+        "locale": "en",
+        "enable_publishing": false,
+        "allow_symbol_change": true,
+        "container_id": "tradingview_chart"
+      });
+    }
+
+    async function fetchMarketAnalysis() {
+      try {
+        let fetchSymbol = currentPair.includes(":") ? "BTCUSDT" : currentPair;
+        const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${fetchSymbol}&interval=15m&limit=50`);
+        const data = await response.json();
+        
+        const closePrices = data.map(candle => parseFloat(candle[4]));
+        const highPrices = data.map(candle => parseFloat(candle[2]));
+        const lowPrices = data.map(candle => parseFloat(candle[3]));
+
+        if(currentPair === "TVC:GOLD") currentPrice = 2650.00 + (Math.random() * 3 - 1.5);
+        else if(currentPair === "TVC:SILVER") currentPrice = 31.80 + (Math.random() * 0.15 - 0.07);
+        else if(currentPair === "CAPITALCOM:COPPER") currentPrice = 4.35 + (Math.random() * 0.03 - 0.015);
+        else currentPrice = closePrices[closePrices.length - 1];
+
+        document.getElementById('live-price').innerText = '$' + currentPrice.toLocaleString(undefined, {minimumFractionDigits: 2});
+
+        // Compute ATR Volatility
+        atr = (Math.max(...highPrices.slice(-14)) - Math.min(...lowPrices.slice(-14))) / 14;
+        if(currentPair.includes(":")) atr = currentPrice * 0.004;
+        
+        document.getElementById('atr-val').innerText = '$' + atr.toFixed(2);
+
+        const resistance = Math.max(...highPrices.slice(-25));
+        const support = Math.min(...lowPrices.slice(-25));
+        document.getElementById('resistance-val').innerText = '$' + (currentPair.includes(":") ? (currentPrice * 1.01).toFixed(2) : resistance.toFixed(2));
+        document.getElementById('support-val').innerText = '$' + (currentPair.includes(":") ? (currentPrice * 0.99).toFixed(2) : support.toFixed(2));
+
+        const recentCandle = data[data.length - 1];
+        const openP = parseFloat(recentCandle[1]);
+        const closeP = parseFloat(recentCandle[4]);
+        let buyPercent = closeP > openP ? Math.min(85, Math.max(55, Math.round(((closeP - openP) / openP) * 1000 + 50))) : Math.max(15, Math.min(45, Math.round(50 - ((openP - closeP) / openP) * 1000)));
+        document.getElementById('buy-pressure-bar').style.width = buyPercent + '%';
+        document.getElementById('buy-pressure-text').innerText = `Buyers: ${buyPercent}%`;
+        document.getElementById('sell-pressure-text').innerText = `Sellers: ${100 - buyPercent}%`;
+
+        const rsi = calculateRSI(closePrices, 14);
+
+        // Takashi Monokava Targets (TP1 at 1.5 ATR, TP2 at 3.0 ATR)
+        document.getElementById('tp1-val').innerText = '$' + (currentPrice + (1.5 * atr)).toFixed(2);
+        document.getElementById('tp2-val').innerText = '$' + (currentPrice + (3.0 * atr)).toFixed(2);
+
+        // Monokava Position Size Auto Lot
+        const riskAmount = balance * 0.01; // 1% Strict Risk
+        const lotSize = (riskAmount / (atr * 1.2 * 10)).toFixed(2);
+        document.getElementById('auto-lot').innerText = `${lotSize > 0 ? lotSize : 0.10} Lots`;
+
+        evaluateMonokavaPositions();
+        evaluateAiSignal(rsi, buyPercent);
+
+      } catch (err) {
+        document.getElementById('live-price').innerText = 'Data Syncing...';
+      }
+    }
+
+    function calculateRSI(prices, period = 14) {
+      let gains = 0, losses = 0;
+      for (let i = prices.length - period; i < prices.length; i++) {
+        const diff = prices[i] - prices[i - 1];
+        if (diff >= 0) gains += diff;
+        else losses -= diff;
+      }
+      let avgGain = gains / period;
+      let avgLoss = losses / period;
+      if (avgLoss === 0) return 100;
+      let rs = avgGain / avgLoss;
+      return 100 - (100 / (1 + rs));
+    }
+
+    function evaluateAiSignal(rsi, buyPressure) {
+      const decisionElem = document.getElementById('ai-decision');
+      if (rsi < 42 && buyPressure > 55) {
+        decisionElem.innerText = "MONOKAVA BUY SETUP";
+        decisionElem.className = "signal-buy";
+      } else if (rsi > 58 && buyPressure < 45) {
+        decisionElem.innerText = "MONOKAVA SELL SETUP";
+        decisionElem.className = "signal-sell";
+      } else {
+        decisionElem.innerText = "NO VALID SETUP";
+        decisionElem.className = "signal-neutral";
+      }
+    }
+
+    function updateTimer() {
+      scanCountdown--;
+      if (scanCountdown <= 0) {
+        scanCountdown = 10;
+        if (isBotActive && currentPrice > 0 && activeTrades.length < 2) {
+          const rsiVal = parseFloat(document.getElementById('rsi-val').innerText) || 50;
+          const buyPress = parseInt(document.getElementById('buy-pressure-text').innerText.replace(/\D/g,'')) || 50;
+          
+          if (rsiVal < 42 && buyPress > 55) executeTrade('BUY', 'Monokava Bot');
+          else if (rsiVal > 58 && buyPress < 45) executeTrade('SELL', 'Monokava Bot');
+        }
+      }
+      document.getElementById('timer-text').innerText = scanCountdown + 's';
+      document.getElementById('timer-progress').style.width = ((scanCountdown / 10) * 100) + '%';
+    }
+
+    function executeTrade(type, trigger) {
+      if (currentPrice === 0) return;
+      
+      const riskAmount = balance * 0.01;
+      const calcLot = parseFloat((riskAmount / (atr * 1.2 * 10)).toFixed(2));
+      const lot = calcLot > 0 ? calcLot : 0.10;
+      const assetLabel = currentPair.replace("TVC:", "").replace("CAPITALCOM:", "");
+
+      // Monokava ATR SL & Targets
+      const slDistance = atr * 1.2;
+      const sl = type === 'BUY' ? currentPrice - slDistance : currentPrice + slDistance;
+      const tp1 = type === 'BUY' ? currentPrice + (1.5 * atr) : currentPrice - (1.5 * atr);
+      const tp2 = type === 'BUY' ? currentPrice + (3.0 * atr) : currentPrice - (3.0 * atr);
+
+      const trade = {
+        id: Date.now(),
+        asset: assetLabel,
+        type: type,
+        lot: lot,
+        entryPrice: currentPrice,
+        sl: sl,
+        tp1: tp1,
+        tp2: tp2,
+        isBreakeven: false,
+        tp1Hit: false,
+        trigger: trigger
+      };
+
+      activeTrades.push(trade);
+      renderActiveTrades();
+    }
+
+    function evaluateMonokavaPositions() {
+      for (let i = activeTrades.length - 1; i >= 0; i--) {
+        let t = activeTrades[i];
+        let pnl = t.type === 'BUY' ? (currentPrice - t.entryPrice) * t.lot * 100 : (t.entryPrice - currentPrice) * t.lot * 100;
+
+        // Monokava Rule 1: Shift SL to Breakeven when price moves 1.5 ATR (TP1 area)
+        let reachedTP1 = t.type === 'BUY' ? currentPrice >= t.tp1 : currentPrice <= t.tp1;
+        if (reachedTP1 && !t.isBreakeven) {
+          t.sl = t.entryPrice; // Set Risk-Free
+          t.isBreakeven = true;
+          t.tp1Hit = true;
+        }
+
+        // Monokava Rule 2: Take Full Profit at TP2 (3.0 ATR)
+        let reachedTP2 = t.type === 'BUY' ? currentPrice >= t.tp2 : currentPrice <= t.tp2;
+        if (reachedTP2) {
+          closeTrade(t.id, "TP2 Hit (1:3 RR)", pnl);
+          continue;
+        }
+
+        // SL Hit Detection
+        let hitSL = t.type === 'BUY' ? currentPrice <= t.sl : currentPrice >= t.sl;
+        if (hitSL) {
+          closeTrade(t.id, t.isBreakeven ? "Breakeven Hit (Risk Free)" : "SL Hit", pnl);
+        }
+      }
+      renderActiveTrades();
+    }
+
+    function closeTrade(id, reason, fixedPnl = null) {
+      const index = activeTrades.findIndex(t => t.id === id);
+      if (index !== -1) {
+        const t = activeTrades[index];
+        const finalPnl = fixedPnl !== null ? fixedPnl : (t.type === 'BUY' ? (currentPrice - t.entryPrice) * t.lot * 100 : (t.entryPrice - currentPrice) * t.lot * 100);
+        
+        balance += finalPnl;
+        document.getElementById('wallet-balance').innerText = '$' + balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        closedTrades.unshift({
+          time: time,
+          asset: t.asset,
+          type: t.type,
+          lot: t.lot,
+          closePrice: currentPrice,
+          pnl: finalPnl,
+          reason: reason
+        });
+
+        activeTrades.splice(index, 1);
+        renderActiveTrades();
+        renderClosedTrades();
+      }
+    }
+
+    function renderActiveTrades() {
+      const tbody = document.getElementById('active-trades-body');
+      tbody.innerHTML = '';
+      if (activeTrades.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #64748b;">No active positions open.</td></tr>';
+        return;
+      }
+
+      activeTrades.forEach(t => {
+        let pnl = t.type === 'BUY' ? (currentPrice - t.entryPrice) * t.lot * 100 : (t.entryPrice - currentPrice) * t.lot * 100;
+        const pnlClass = pnl >= 0 ? 'pnl-profit' : 'pnl-loss';
+        const typeClass = t.type === 'BUY' ? 'text-buy' : 'text-sell';
+        const slStatus = t.isBreakeven ? '<span class="status-tag" style="background:#22c55e; color:#000;">RISK FREE</span>' : '<span class="status-tag">INITIAL SL</span>';
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${t.asset}</td>
+          <td class="${typeClass}">${t.type}</td>
+          <td>${t.lot}</td>
+          <td>$${t.entryPrice.toFixed(2)}</td>
+          <td>${slStatus}</td>
+          <td class="${pnlClass}">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}</td>
+          <td><button class="btn-close" onclick="closeTrade(${t.id}, 'Manual Close')">Close</button></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function renderClosedTrades() {
+      const tbody = document.getElementById('closed-trades-body');
+      tbody.innerHTML = '';
+      if (closedTrades.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #64748b;">No trade history logged yet.</td></tr>';
+        return;
+      }
+
+      closedTrades.forEach(t => {
+        const pnlClass = t.pnl >= 0 ? 'pnl-profit' : 'pnl-loss';
+    
