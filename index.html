@@ -12,17 +12,25 @@
     .status-badge { background: #22c55e; color: #000; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
     .card { background: #131722; border-radius: 8px; padding: 12px; border: 1px solid #1e293b; margin-bottom: 12px; }
     .card h2 { font-size: 1rem; margin-bottom: 8px; color: #94a3b8; }
-    .chart-container { height: 380px; width: 100%; }
+    .chart-container { height: 350px; width: 100%; }
     .price-display { font-size: 1.5rem; font-weight: bold; color: #f8fafc; margin-bottom: 5px; }
     .signal-box { display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 10px; border-radius: 6px; margin: 8px 0; }
     .signal-buy { color: #22c55e; font-weight: bold; font-size: 1.1rem; }
     .signal-sell { color: #ef4444; font-weight: bold; font-size: 1.1rem; }
     .signal-neutral { color: #eab308; font-weight: bold; font-size: 1.1rem; }
-    .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 6px; font-size: 0.95rem; }
+    .btn { width: 49%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.95rem; }
     .btn-buy { background: #22c55e; color: #000; }
     .btn-sell { background: #ef4444; color: #fff; }
+    .btn-group { display: flex; justify-content: space-between; margin-top: 8px; }
     .stats-row { display: flex; justify-content: space-between; font-size: 0.85rem; color: #94a3b8; margin-top: 6px; }
     select { width: 100%; padding: 8px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 6px; margin-bottom: 10px; font-size: 0.95rem; }
+    
+    /* Trade History Table Styles */
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.8rem; }
+    th, td { text-align: left; padding: 6px; border-bottom: 1px solid #1e293b; }
+    th { color: #64748b; font-weight: 600; }
+    .text-buy { color: #22c55e; font-weight: bold; }
+    .text-sell { color: #ef4444; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -67,15 +75,37 @@
     </div>
   </div>
 
-  <!-- Simulated Paper Trading -->
+  <!-- Paper Trading Controls -->
   <div class="card">
     <h2>Paper Trading Execution</h2>
-    <div class="stats-row" style="margin-bottom: 8px;">
+    <div class="stats-row">
       <span>Virtual Wallet Balance:</span>
       <strong id="wallet-balance" style="color: #38bdf8;">$10,000.00</strong>
     </div>
-    <button class="btn btn-buy" onclick="executeTrade('BUY')">Execute Paper BUY</button>
-    <button class="btn btn-sell" onclick="executeTrade('SELL')">Execute Paper SELL</button>
+    <div class="btn-group">
+      <button class="btn btn-buy" onclick="executeTrade('BUY')">BUY Order</button>
+      <button class="btn btn-sell" onclick="executeTrade('SELL')">SELL Order</button>
+    </div>
+  </div>
+
+  <!-- Trade History & PnL Ledger -->
+  <div class="card">
+    <h2>Trade History Log</h2>
+    <table id="trade-table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Pair</th>
+          <th>Type</th>
+          <th>Price</th>
+        </tr>
+      </thead>
+      <tbody id="trade-history-body">
+        <tr>
+          <td colspan="4" style="text-align: center; color: #64748b;">No trades executed yet.</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
   <!-- TradingView Script -->
@@ -83,11 +113,12 @@
   <script type="text/javascript">
     let currentPair = "BTCUSDT";
     let currentPrice = 0;
-    let tvWidget = null;
+    let balance = 10000;
+    let trades = [];
 
     function loadChart(symbol) {
       document.getElementById('chart_holder').innerHTML = '<div id="tradingview_chart" style="height:100%;"></div>';
-      tvWidget = new TradingView.widget({
+      new TradingView.widget({
         "autosize": true,
         "symbol": "BINANCE:" + symbol,
         "interval": "15",
@@ -140,7 +171,30 @@
     }
 
     function executeTrade(type) {
-      alert(`${type} Order Placed for ${currentPair} at $${currentPrice.toFixed(2)}`);
+      if (currentPrice === 0) return alert("Price loading... Please wait.");
+
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const newTrade = { time, pair: currentPair, type, price: currentPrice };
+
+      trades.unshift(newTrade);
+      renderTradeHistory();
+    }
+
+    function renderTradeHistory() {
+      const tbody = document.getElementById('trade-history-body');
+      tbody.innerHTML = '';
+
+      trades.forEach(t => {
+        const row = document.createElement('tr');
+        const typeClass = t.type === 'BUY' ? 'text-buy' : 'text-sell';
+        row.innerHTML = `
+          <td>${t.time}</td>
+          <td>${t.pair}</td>
+          <td class="${typeClass}">${t.type}</td>
+          <td>$${t.price.toFixed(2)}</td>
+        `;
+        tbody.appendChild(row);
+      });
     }
 
     // Initial Load
