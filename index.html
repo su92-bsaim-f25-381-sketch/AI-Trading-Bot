@@ -3,447 +3,182 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TradePulse AI — Live Terminal & Bot</title>
-  <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    body { background-color: #0b0e14; color: #e1e7ef; padding: 12px; }
-    
-    .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #1e293b; margin-bottom: 10px; }
-    .header h1 { font-size: 0.95rem; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
-    
-    .binance-live-badge { background: #1e293b; border: 1px solid #eab308; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; color: #eab308; display: flex; align-items: center; gap: 6px; }
-    .pulse-dot { width: 8px; height: 8px; background-color: #22c55e; border-radius: 50%; display: inline-block; animation: blink 1s infinite; }
-    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-
-    .switch-container { display: flex; align-items: center; gap: 8px; }
-    .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 22px; }
-    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-    input:checked + .slider { background-color: #22c55e; }
-    input:checked + .slider:before { transform: translateX(22px); }
-
-    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 6px; }
-    .stats-grid-top { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
-    
-    .metric-card { background: #1e293b; padding: 8px; border-radius: 6px; text-align: center; }
-    .metric-card label { font-size: 0.58rem; color: #94a3b8; display: block; margin-bottom: 2px; text-transform: uppercase; }
-    .metric-card span { font-size: 0.85rem; font-weight: bold; }
-
-    .stat-card-top { background: #0f172a; border: 1px solid #1e293b; padding: 6px; border-radius: 6px; text-align: center; }
-    .stat-card-top label { font-size: 0.58rem; color: #64748b; display: block; }
-    .stat-card-top span { font-size: 0.82rem; font-weight: bold; }
-
-    .nav-tabs { display: flex; gap: 6px; margin-bottom: 10px; overflow-x: auto; padding-bottom: 4px; border-bottom: 1px solid #1e293b; }
-    .tab-btn { background: #1e293b; border: 1px solid #334155; color: #94a3b8; padding: 8px 12px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.2s; }
-    .tab-btn:hover { background: #334155; color: #fff; }
-    .tab-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
-
-    .tab-content { display: none; }
-    .tab-content.active { display: block !important; }
-
-    .card { background: #131722; border-radius: 8px; padding: 12px; border: 1px solid #1e293b; margin-bottom: 10px; }
-    .card h2 { font-size: 0.8rem; margin-bottom: 8px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
-
-    .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-    select, button, input { width: 100%; padding: 10px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 6px; font-size: 0.85rem; font-weight: 600; }
-    
-    .chart-box { height: 460px; width: 100%; border-radius: 6px; overflow: hidden; border: 1px solid #1e293b; background: #0f172a; }
-    
-    .scanner-display { background: #0f172a; border: 1px solid #1e293b; padding: 10px; border-radius: 6px; margin-bottom: 10px; }
-    .scanner-row { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 4px; border-bottom: 1px solid #1e293b; padding-bottom: 4px; }
-    .ai-think-box { font-size: 0.78rem; color: #cbd5e1; background: #0b0e14; padding: 10px; border-radius: 4px; border-left: 3px solid #38bdf8; margin-top: 8px; line-height: 1.4; font-family: monospace; }
-    
-    .btn-group { display: flex; gap: 8px; margin-top: 8px; }
-    .btn-buy { background: #22c55e; color: #000; padding: 10px; border: none; border-radius: 6px; font-weight: bold; width: 50%; cursor: pointer; }
-    .btn-sell { background: #ef4444; color: #fff; padding: 10px; border: none; border-radius: 6px; font-weight: bold; width: 50%; cursor: pointer; }
-    .btn-close { background: #334155; color: #fff; padding: 4px 8px; border: none; border-radius: 4px; font-size: 0.72rem; cursor: pointer; }
-
-    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.75rem; }
-    th, td { text-align: left; padding: 8px 4px; border-bottom: 1px solid #1e293b; }
-    th { color: #64748b; font-weight: 600; }
-  </style>
+  <title>TradePulse AI - Institutional Terminal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen">
 
-  <div class="header">
-    <h1>📈 TradePulse AI</h1>
-    <div class="binance-live-badge">
-      <span class="pulse-dot"></span>
-      <span>REALTIME FEED: <span id="binance-live-price" style="color: #fff;">Connecting...</span></span>
+  <!-- Navigation Header -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50 px-6 py-4 flex flex-wrap justify-between items-center gap-4">
+    <div class="flex items-center gap-3">
+      <div class="bg-blue-600 p-2 rounded-lg"><i class="fa-solid fa-robot text-xl text-white"></i></div>
+      <div>
+        <h1 class="text-xl font-bold tracking-wide text-blue-400">TradePulse AI</h1>
+        <p class="text-xs text-slate-400">Quantitative Algorithmic Engine</p>
+      </div>
     </div>
-    <div class="switch-container">
-      <span id="status-label" style="color: #ef4444; font-size:0.75rem; font-weight:bold;">AUTO BOT OFF</span>
-      <label class="switch">
-        <input type="checkbox" id="bot-toggle" onchange="toggleBot()">
-        <span class="slider"></span>
+
+    <!-- Capital Input Widget -->
+    <div class="flex items-center gap-2 bg-slate-800/80 px-4 py-2 rounded-xl border border-slate-700">
+      <i class="fa-solid fa-wallet text-emerald-400"></i>
+      <span class="text-xs text-slate-400 font-medium">Capital ($):</span>
+      <input id="capital-input" type="number" value="10000" class="w-24 bg-slate-900 text-emerald-400 font-bold text-sm px-2 py-1 rounded border border-slate-700 focus:outline-none focus:border-blue-500">
+      <button onclick="updateCapital()" class="bg-blue-600 hover:bg-blue-500 text-xs px-3 py-1 rounded font-semibold transition">Set</button>
+    </div>
+
+    <!-- Live Status & Auto-Bot Toggle -->
+    <div class="flex items-center gap-4">
+      <div class="bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-mono">
+        <span class="text-slate-400">Price: </span>
+        <span id="live-price-badge" class="text-emerald-400 font-bold">Loading...</span>
+      </div>
+      <label class="flex items-center gap-2 cursor-pointer bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
+        <span id="bot-status-label" class="text-xs font-bold text-red-400">AUTO BOT OFF</span>
+        <input type="checkbox" id="bot-toggle" onchange="toggleBot(this)" class="sr-only">
+        <div class="w-9 h-5 bg-slate-700 rounded-full relative p-0.5 transition duration-200 ease-in-out switch-bg">
+          <div class="dot w-4 h-4 bg-white rounded-full transition duration-200 ease-in-out transform"></div>
+        </div>
       </label>
     </div>
-  </div>
+  </header>
 
-  <div class="metrics-grid">
-    <div class="metric-card">
-      <label>TOTAL CAPITAL ($)</label>
-      <span id="display-total-cap" style="color: #38bdf8;">$10,000.00</span>
-    </div>
-    <div class="metric-card">
-      <label>ACTIVE CAPITAL (50%)</label>
-      <span id="display-active-cap" style="color: #38bdf8;">$5,000.00</span>
-    </div>
-    <div class="metric-card">
-      <label>BACKUP CAPITAL (50%)</label>
-      <span id="display-backup-cap" style="color: #a855f7;">$5,000.00</span>
-    </div>
-    <div class="metric-card">
-      <label>MAX RISK/TRADE (1%)</label>
-      <span id="display-risk-limit" style="color: #ef4444;">$100.00</span>
-    </div>
-  </div>
+  <!-- Main Container -->
+  <main class="p-6 max-w-7xl mx-auto space-y-6">
 
-  <div class="stats-grid-top">
-    <div class="stat-card-top"><label>TOTAL TRADES</label><span id="top-total-trades">0</span></div>
-    <div class="stat-card-top"><label>WIN TRADES</label><span id="top-win-trades" style="color: #22c55e;">0</span></div>
-    <div class="stat-card-top"><label>LOSS TRADES</label><span id="top-loss-trades" style="color: #ef4444;">0</span></div>
-    <div class="stat-card-top"><label>WIN RATIO</label><span id="top-win-ratio" style="color: #38bdf8;">0.0%</span></div>
-  </div>
-
-  <div class="nav-tabs">
-    <button class="tab-btn active" onclick="switchTab('tab-terminal', this)">📊 Chart & Terminal</button>
-    <button class="tab-btn" onclick="switchTab('tab-bot-status', this)">🤖 Bot Live Scanner</button>
-    <button class="tab-btn" onclick="switchTab('tab-trades', this)">⚡ Trades & Execution</button>
-    <button class="tab-btn" onclick="switchTab('tab-analytics', this)">📜 History & Analytics</button>
-  </div>
-
-  <div id="tab-terminal" class="tab-content active">
-    <div class="card">
-      <h2>Market Terminal</h2>
-      <div class="controls-grid">
-        <div>
-          <label style="font-size:0.68rem; color:#64748b;">CATEGORY</label>
-          <select id="asset-category" onchange="updateAssetDropdown()">
-            <option value="metals" selected>Metals & Commodities</option>
-            <option value="crypto">Crypto Market (Binance Direct)</option>
-            <option value="forex">Forex Major Pairs</option>
-          </select>
-        </div>
-        <div>
-          <label style="font-size:0.68rem; color:#64748b;">SELECT SYMBOL</label>
-          <select id="symbol-select" onchange="onSymbolChanged()"></select>
-        </div>
+    <!-- Market Selector & Metrics Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+        <label class="text-xs text-slate-400 font-semibold block mb-2">SELECT SYMBOL</label>
+        <select id="symbol-select" onchange="onSymbolChanged()" class="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded-lg p-2.5 text-sm font-semibold focus:outline-none focus:border-blue-500">
+          <option value="BINANCE:BTCUSDT" selected>BTC/USDT (Crypto 24/7)</option>
+          <option value="BINANCE:ETHUSDT">ETH/USDT (Crypto 24/7)</option>
+          <option value="OANDA:XAUUSD">XAU/USD (Gold)</option>
+          <option value="FX:EURUSD">EUR/USD (Forex)</option>
+        </select>
       </div>
-      <div class="chart-box" id="tv_chart_container"></div>
-    </div>
-  </div>
 
-  <div id="tab-bot-status" class="tab-content">
-    <div class="card">
-      <h2>Bot Real-Time Market Analysis Tracker</h2>
-      <div class="scanner-display">
-        <div class="scanner-row">
-          <span style="color:#94a3b8;">Currently Analyzing:</span>
-          <span id="scan-symbol" style="color:#38bdf8; font-weight:bold;">XAU/USD</span>
-        </div>
-        <div class="scanner-row">
-          <span style="color:#94a3b8;">Live Market Price:</span>
-          <span id="scan-live-price" style="color:#22c55e; font-weight:bold;">Fetching...</span>
-        </div>
-        <div class="scanner-row">
-          <span style="color:#94a3b8;">Quant Metrics (RSI / ATR):</span>
-          <span id="scan-quant-metrics" style="color:#a855f7; font-weight:bold;">RSI: -- | ATR: --</span>
-        </div>
+      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+        <span class="text-xs text-slate-400 font-semibold block mb-1">AUTO RISK LOT (1%)</span>
+        <span id="calculated-lot" class="text-2xl font-bold text-blue-400">0.01</span>
       </div>
-      <div class="ai-think-box" id="ai-reasoning">
-        [BOT LOG]: Active polling sync enabled. Live prices updating continuously.
-      </div>
-    </div>
-  </div>
 
-  <div id="tab-trades" class="tab-content">
-    <div class="card">
-      <h2>Execution Panel</h2>
-      <div class="btn-group">
-        <button class="btn-buy" onclick="executeManualTrade('BUY')">Manual BUY Order</button>
-        <button class="btn-sell" onclick="executeManualTrade('SELL')">Manual SELL Order</button>
+      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+        <span class="text-xs text-slate-400 font-semibold block mb-1">RSI (14)</span>
+        <span id="metric-rsi" class="text-2xl font-bold text-slate-200">--</span>
+      </div>
+
+      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+        <span class="text-xs text-slate-400 font-semibold block mb-1">QUANT SIGNAL</span>
+        <span id="quant-signal" class="text-sm font-bold text-yellow-400">WAITING FOR SETUP</span>
       </div>
     </div>
 
-    <div class="card">
-      <h2>Open Active Trades</h2>
-      <table>
-        <thead>
-          <tr><th>Asset</th><th>Type</th><th>Lots</th><th>Entry Price</th><th>Live P&L ($)</th><th>Action</th></tr>
-        </thead>
-        <tbody id="active-trades-body">
-          <tr><td colspan="6" style="text-align: center; color: #64748b;">No active trades running.</td></tr>
-        </tbody>
-      </table>
+    <!-- Active Trades Terminal -->
+    <div class="bg-slate-900 rounded-xl border border-slate-800 p-5">
+      <h3 class="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-list-check text-blue-400"></i> Active Executions
+      </h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs text-slate-400">
+          <thead class="bg-slate-800/50 uppercase font-semibold text-slate-300 border-b border-slate-700">
+            <tr>
+              <th class="p-3">ID</th>
+              <th class="p-3">Symbol</th>
+              <th class="p-3">Type</th>
+              <th class="p-3">Lots</th>
+              <th class="p-3">Entry</th>
+              <th class="p-3">SL / TP</th>
+              <th class="p-3">Time</th>
+            </tr>
+          </thead>
+          <tbody id="trades-table-body" class="divide-y divide-slate-800 font-mono">
+            <tr>
+              <td colspan="7" class="p-4 text-center text-slate-500">No active trades executed yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-
-  <div id="tab-analytics" class="tab-content">
-    <div class="card">
-      <h2>Closed Trades Log</h2>
-      <table>
-        <thead>
-          <tr><th>Time</th><th>Asset</th><th>Type</th><th>Lots</th><th>Realized P&L ($)</th></tr>
-        </thead>
-        <tbody id="trade-history-body">
-          <tr><td colspan="5" style="text-align: center; color: #64748b;">No history records found.</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+  </main>
 
   <script>
-    const BACKEND_URL = "http://localhost:5000";
-    let liveMarketPrice = 0.00;
-    let currentATR = 2.0;
     let isBotActive = false;
-    let mainLoopInterval = null;
-    let lastExecutedTime = 0;
-    let cachedActiveTrades = [];
+    const backendUrl = "http://localhost:5000";
 
-    const assets = {
-      metals: [{ name: "XAU/USD (Gold)", symbol: "OANDA:XAUUSD" }],
-      crypto: [
-        { name: "BTC/USDT", symbol: "BINANCE:BTCUSDT" },
-        { name: "ETH/USDT", symbol: "BINANCE:ETHUSDT" }
-      ],
-      forex: [
-        { name: "EUR/USD", symbol: "FX:EURUSD" },
-        { name: "GBP/USD", symbol: "FX:GBPUSD" }
-      ]
-    };
-
-    function updateAssetDropdown() {
-      const category = document.getElementById('asset-category').value;
-      const symbolSelect = document.getElementById('symbol-select');
-      symbolSelect.innerHTML = '';
-
-      if (assets[category]) {
-        assets[category].forEach(item => {
-          let opt = document.createElement('option');
-          opt.value = item.symbol;
-          opt.innerText = item.name;
-          symbolSelect.appendChild(opt);
-        });
-      }
-      onSymbolChanged();
-    }
-
-    function onSymbolChanged() {
-      loadTradingViewChart();
-      syncLiveMarketData();
-    }
-
-    function loadTradingViewChart() {
-      const currentSymbol = document.getElementById('symbol-select').value || "OANDA:XAUUSD";
-      document.getElementById('tv_chart_container').innerHTML = '';
-      
-      new TradingView.widget({
-        "autosize": true,
-        "symbol": currentSymbol,
-        "interval": "1",
-        "timezone": "Etc/UTC",
-        "theme": "dark",
-        "style": "1",
-        "locale": "en",
-        "container_id": "tv_chart_container"
-      });
-    }
-
-    async function syncLiveMarketData() {
-      const symbolSelect = document.getElementById('symbol-select');
-      const rawSymbol = symbolSelect ? symbolSelect.value : "OANDA:XAUUSD";
-
+    async function updateCapital() {
+      const cap = document.getElementById('capital-input').value;
       try {
-        const res = await fetch(`${BACKEND_URL}/api/market?symbol=${rawSymbol}`);
+        await fetch(`${backendUrl}/api/capital`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ capital: cap })
+        });
+        syncMarketData();
+      } catch (err) { console.error("Capital update error:", err); }
+    }
+
+    async function syncMarketData() {
+      const symbol = document.getElementById('symbol-select').value;
+      try {
+        const res = await fetch(`${backendUrl}/api/market?symbol=${symbol}`);
         const data = await res.json();
+        
+        document.getElementById('live-price-badge').innerText = "$" + data.price;
+        document.getElementById('calculated-lot').innerText = data.auto_lot;
+        document.getElementById('metric-rsi').innerText = data.rsi;
+        document.getElementById('quant-signal').innerText = data.signal;
 
-        if (data.price) {
-          liveMarketPrice = data.price;
-          currentATR = data.atr;
-
-          const formattedPrice = `$${liveMarketPrice.toFixed(2)}`;
-          document.getElementById('binance-live-price').innerText = formattedPrice;
-          document.getElementById('scan-live-price').innerText = formattedPrice;
-          document.getElementById('scan-symbol').innerText = rawSymbol.replace('OANDA:', '').replace('BINANCE:', '').replace('FX:', '');
-          document.getElementById('scan-quant-metrics').innerText = `RSI: ${data.rsi} | ATR: $${data.atr} | EMA20: $${data.ema20}`;
-
-          const balance = data.wallet_balance;
-          document.getElementById('display-total-cap').innerText = `$${balance.toFixed(2)}`;
-          document.getElementById('display-active-cap').innerText = `$${(balance * 0.5).toFixed(2)}`;
-          document.getElementById('display-backup-cap').innerText = `$${(balance * 0.5).toFixed(2)}`;
-          document.getElementById('display-risk-limit').innerText = `$${(balance * 0.01).toFixed(2)}`;
-
-          document.getElementById('ai-reasoning').innerHTML = `[QUANT SIGNAL]: <b>${data.signal}</b> | Price: $${data.price} | Support: $${data.support} | Resistance: $${data.resistance}`;
-
-          updateLivePositionsPnL();
-
-          if (isBotActive && (data.suggested_action === 'BUY' || data.suggested_action === 'SELL')) {
-            const now = Date.now();
-            if (now - lastExecutedTime > 20000) {
-              lastExecutedTime = now;
-              await sendExecuteTradeAPI(data.suggested_action, data.auto_lot, data.price, data.atr);
-            }
-          }
+        if (isBotActive && (data.suggested_action === 'BUY' || data.suggested_action === 'SELL')) {
+          autoExecuteTrade(symbol, data.suggested_action, data.auto_lot, data.price, data.atr);
         }
-      } catch (err) {
-        console.error("Live Data Fetch Error:", err);
-      }
+      } catch (err) { console.error("Sync Error:", err); }
     }
 
-    function updateLivePositionsPnL() {
-      if (!cachedActiveTrades || cachedActiveTrades.length === 0) return;
-      
-      cachedActiveTrades.forEach(pos => {
-        const pnlCell = document.getElementById(`pnl-${pos.id}`);
-        if (pnlCell && liveMarketPrice > 0) {
-          let livePnL = (pos.type === "BUY") ? (liveMarketPrice - pos.entry_price) * pos.lots * 10 : (pos.entry_price - liveMarketPrice) * pos.lots * 10;
-          pnlCell.style.color = livePnL >= 0 ? '#22c55e' : '#ef4444';
-          pnlCell.innerText = `${livePnL >= 0 ? '+' : ''}$${livePnL.toFixed(2)}`;
-        }
-      });
+    async function autoExecuteTrade(symbol, action, lots, price, atr) {
+      try {
+        await fetch(`${backendUrl}/api/trade/execute`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ symbol, type: action, lots, price, atr })
+        });
+        syncActiveTrades();
+      } catch (err) { console.error("Execution Error:", err); }
     }
 
-    function toggleBot() {
-      isBotActive = document.getElementById('bot-toggle').checked;
-      const label = document.getElementById('status-label');
+    async function syncActiveTrades() {
+      try {
+        const res = await fetch(`${backendUrl}/api/trades/active`);
+        const data = await res.json();
+        const tbody = document.getElementById('trades-table-body');
+        
+        if (!data.active_trades.length) return;
+        
+        tbody.innerHTML = data.active_trades.map(t => `
+          <tr class="hover:bg-slate-800/30">
+            <td class="p-3 text-slate-500">#${t.id}</td>
+            <td class="p-3 font-semibold text-slate-200">${t.symbol}</td>
+            <td class="p-3 font-bold ${t.type === 'BUY' ? 'text-emerald-400' : 'text-red-400'}">${t.type}</td>
+            <td class="p-3 text-blue-400">${t.lots}</td>
+            <td class="p-3">${t.entry_price}</td>
+            <td class="p-3 text-slate-500">${t.sl} / ${t.tp}</td>
+            <td class="p-3 text-slate-500">${t.timestamp}</td>
+          </tr>
+        `).join('');
+      } catch (err) { console.error("Trade Sync Error:", err); }
+    }
+
+    function toggleBot(checkbox) {
+      isBotActive = checkbox.checked;
+      const label = document.getElementById('bot-status-label');
       label.innerText = isBotActive ? "AUTO BOT ON" : "AUTO BOT OFF";
-      label.style.color = isBotActive ? "#22c55e" : "#ef4444";
+      label.className = isBotActive ? "text-xs font-bold text-emerald-400" : "text-xs font-bold text-red-400";
     }
 
-    function switchTab(tabId, btnElem) {
-      document.querySelectorAll('.tab-content').forEach(t => { t.classList.remove('active'); t.style.display = 'none'; });
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    function onSymbolChanged() { syncMarketData(); }
 
-      const activeTab = document.getElementById(tabId);
-      if (activeTab) { activeTab.classList.add('active'); activeTab.style.display = 'block'; }
-      btnElem.classList.add('active');
-
-      if (tabId === 'tab-terminal') loadTradingViewChart();
-      if (tabId === 'tab-trades') fetchActiveTrades();
-      if (tabId === 'tab-analytics') fetchTradeHistory();
-    }
-
-    async function executeManualTrade(type) {
-      const selectElem = document.getElementById('symbol-select');
-      const assetName = selectElem.options[selectElem.selectedIndex] ? selectElem.options[selectElem.selectedIndex].text : "XAU/USD";
-      await sendExecuteTradeAPI(type, 0.10, liveMarketPrice, currentATR, assetName);
-    }
-
-    async function sendExecuteTradeAPI(type, lots, price, atr, symbol = 'XAU/USD') {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/trade/execute`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ symbol, type, lots, price, atr })
-        });
-        const result = await res.json();
-        if (result.status === 'SUCCESS') fetchActiveTrades();
-      } catch (err) {
-        console.error("Trade execution error:", err);
-      }
-    }
-
-    async function fetchActiveTrades() {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/trades/active`);
-        const data = await res.json();
-        cachedActiveTrades = data.active_trades || [];
-        renderActiveTrades(cachedActiveTrades);
-      } catch (err) {
-        console.error("Error fetching active trades:", err);
-      }
-    }
-
-    function renderActiveTrades(trades) {
-      const tbody = document.getElementById('active-trades-body');
-      tbody.innerHTML = '';
-      if (!trades || trades.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #64748b;">No active trades running.</td></tr>';
-        return;
-      }
-      trades.forEach(pos => {
-        let row = `<tr>
-          <td>${pos.symbol}</td>
-          <td style="color:${pos.type==='BUY'?'#22c55e':'#ef4444'}; font-weight:bold;">${pos.type}</td>
-          <td>${pos.lots}</td>
-          <td>$${pos.entry_price}</td>
-          <td id="pnl-${pos.id}" style="font-weight:bold; color:#22c55e;">+$0.00</td>
-          <td><button class="btn-close" onclick="closeTradeAPI(${pos.id})">Close</button></td>
-        </tr>`;
-        tbody.innerHTML += row;
-      });
-      updateLivePositionsPnL();
-    }
-
-    async function closeTradeAPI(tradeId) {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/trade/close`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: tradeId, exit_price: liveMarketPrice })
-        });
-        const data = await res.json();
-        if (data.status === 'SUCCESS') {
-          fetchActiveTrades();
-          fetchTradeHistory();
-        }
-      } catch (err) {
-        console.error("Error closing trade:", err);
-      }
-    }
-
-    async function fetchTradeHistory() {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/trades/history`);
-        const data = await res.json();
-        renderTradeHistory(data.closed_trades);
-      } catch (err) {
-        console.error("Error fetching trade history:", err);
-      }
-    }
-
-    function renderTradeHistory(trades) {
-      const tbody = document.getElementById('trade-history-body');
-      tbody.innerHTML = '';
-      if (!trades || trades.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b;">No history records found.</td></tr>';
-        return;
-      }
-
-      let winCount = 0;
-      let lossCount = 0;
-
-      trades.forEach(t => {
-        if (t.pnl >= 0) winCount++; else lossCount++;
-        let pnlColor = t.pnl >= 0 ? '#22c55e' : '#ef4444';
-        let row = `<tr>
-          <td>${t.close_time}</td>
-          <td>${t.symbol}</td>
-          <td style="color:${t.type==='BUY'?'#22c55e':'#ef4444'}; font-weight:bold;">${t.type}</td>
-          <td>${t.lots}</td>
-          <td style="color:${pnlColor}; font-weight:bold;">${t.pnl >= 0 ? '+' : ''}$${t.pnl.toFixed(2)}</td>
-        </tr>`;
-        tbody.innerHTML += row;
-      });
-
-      const total = trades.length;
-      const winRatio = total > 0 ? ((winCount / total) * 100).toFixed(1) : "0.0";
-      document.getElementById('top-total-trades').innerText = total;
-      document.getElementById('top-win-trades').innerText = winCount;
-      document.getElementById('top-loss-trades').innerText = lossCount;
-      document.getElementById('top-win-ratio').innerText = `${winRatio}%`;
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-      updateAssetDropdown();
-      fetchActiveTrades();
-      // Continuous background live polling (Updates price and PnL every 1.5 seconds)
-      mainLoopInterval = setInterval(syncLiveMarketData, 1500);
-    });
+    setInterval(syncMarketData, 3000);
+    setInterval(syncActiveTrades, 4000);
   </script>
 </body>
 </html>
