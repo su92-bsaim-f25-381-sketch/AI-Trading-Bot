@@ -19,13 +19,14 @@
     input:checked + .slider { background-color: #22c55e; }
     input:checked + .slider:before { transform: translateX(22px); }
 
-    /* Top Capital & Performance Grid */
+    /* Top Capital & Risk Management Cards */
     .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 6px; }
     .stats-grid-top { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
     
     .metric-card { background: #1e293b; padding: 8px; border-radius: 6px; text-align: center; }
     .metric-card label { font-size: 0.6rem; color: #94a3b8; display: block; margin-bottom: 2px; }
     .metric-card span { font-size: 0.85rem; font-weight: bold; }
+    .metric-card input { background: transparent; border: 1px dashed #38bdf8; color: #38bdf8; text-align: center; font-weight: bold; font-size: 0.85rem; width: 100%; padding: 2px; border-radius: 4px; }
 
     .stat-card-top { background: #0f172a; border: 1px solid #1e293b; padding: 6px; border-radius: 6px; text-align: center; }
     .stat-card-top label { font-size: 0.58rem; color: #64748b; display: block; }
@@ -60,4 +61,367 @@
     th, td { text-align: left; padding: 8px 4px; border-bottom: 1px solid #1e293b; }
     th { color: #64748b; font-weight: 600; }
     
-    .indicator-badge {
+    .indicator-badge { display: inline-block; padding: 2px 6px; font-size: 0.68rem; border-radius: 4px; background: #0f172a; border: 1px solid #334155; margin-right: 4px; color: #38bdf8; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>📈 TradePulse AI — World Top Indicators</h1>
+    <div class="switch-container">
+      <span id="status-label" style="color: #ef4444; font-size:0.75rem; font-weight:bold;">AUTO BOT OFF</span>
+      <label class="switch">
+        <input type="checkbox" id="bot-toggle" onchange="toggleBot()">
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <label>SET YOUR CAPITAL ($)</label>
+      <input type="number" id="input-total-capital" value="10000" oninput="updateCapitalFromInput()">
+    </div>
+    <div class="metric-card">
+      <label>ACTIVE (50%)</label>
+      <span id="display-active-cap" style="color: #38bdf8;">$5,000.00</span>
+    </div>
+    <div class="metric-card">
+      <label>BACKUP (50%)</label>
+      <span id="display-backup-cap" style="color: #a855f7;">$5,000.00</span>
+    </div>
+    <div class="metric-card">
+      <label>MAX RISK (2%)</label>
+      <span id="display-risk-limit" style="color: #ef4444;">$100.00</span>
+    </div>
+  </div>
+
+  <div class="stats-grid-top">
+    <div class="stat-card-top">
+      <label>TOTAL TRADES</label>
+      <span id="top-total-trades">0</span>
+    </div>
+    <div class="stat-card-top">
+      <label>WIN TRADES</label>
+      <span id="top-win-trades" style="color: #22c55e;">0</span>
+    </div>
+    <div class="stat-card-top">
+      <label>LOSS TRADES</label>
+      <span id="top-loss-trades" style="color: #ef4444;">0</span>
+    </div>
+    <div class="stat-card-top">
+      <label>WIN RATIO (AVG)</label>
+      <span id="top-win-ratio" style="color: #38bdf8;">0.0%</span>
+    </div>
+  </div>
+
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('tab-terminal', this)">📊 Chart & Terminal</button>
+    <button class="tab-btn" onclick="switchTab('tab-bot-status', this)">🤖 Strategy Engine</button>
+    <button class="tab-btn" onclick="switchTab('tab-trades', this)">⚡ Trades & Execution</button>
+    <button class="tab-btn" onclick="switchTab('tab-analytics', this)">📜 History & Analytics</button>
+  </div>
+
+  <div id="tab-terminal" class="tab-content active">
+    <div class="card">
+      <h2>Market Terminal</h2>
+      <div class="controls-grid">
+        <div>
+          <label style="font-size:0.68rem; color:#64748b;">CATEGORY</label>
+          <select id="asset-category" onchange="updateAssetDropdown()">
+            <option value="crypto" selected>Crypto Market (Binance)</option>
+            <option value="forex">Forex Major & Minor (FXCM/OANDA)</option>
+            <option value="metals">Metals & Commodities</option>
+            <option value="stocks">Shares & Indices (NASDAQ/US)</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.68rem; color:#64748b;">SYMBOL (ALL ASSETS)</label>
+          <select id="symbol-select" onchange="changeTradingViewSymbol()">
+            </select>
+        </div>
+      </div>
+      
+      <div class="chart-box" id="tradingview_chart_container">
+        <iframe id="tv_iframe" src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&symbol=BINANCE%3ABTCUSDT&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=131722&theme=dark&style=1&timezone=Etc%2FUTC" style="width: 100%; height: 100%; border: none;"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-bot-status" class="tab-content">
+    <div class="card">
+      <h2>Top Trader Indicators Suite</h2>
+      <div style="margin-bottom: 10px;">
+        <span class="indicator-badge">200 EMA Trend</span>
+        <span class="indicator-badge">RSI 14 Momentum</span>
+        <span class="indicator-badge">ATR Volatility</span>
+        <span class="indicator-badge">Kotegawa 1:3 R:R</span>
+      </div>
+      <div class="signal-box">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:0.85rem;">Engine Status:</span>
+          <span id="bot-working-status" style="color: #ef4444; font-size: 0.78rem; font-weight: bold;">STANDBY / OFF</span>
+        </div>
+        <div class="ai-think-box" id="ai-reasoning">
+          [SYSTEM LOG]: System initialized. Enter your custom balance and turn AUTO BOT ON to execute 200 EMA + RSI + ATR Confluence strategy.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-trades" class="tab-content">
+    <div class="card">
+      <h2>Manual & Bot Controls</h2>
+      <div class="controls-grid">
+        <div>
+          <label style="font-size:0.7rem; color:#64748b;">CALCULATED LOT SIZE (AUTO)</label>
+          <input type="text" id="calculated-lot-display" value="0.10 Lots" disabled style="color: #22c55e;">
+        </div>
+        <div>
+          <label style="font-size:0.7rem; color:#64748b;">RISK REWARD RATIO</label>
+          <input type="text" value="1 : 3 (Kotegawa Rule)" disabled style="color: #38bdf8;">
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn-buy" onclick="executeManualTrade('BUY')">Manual BUY</button>
+        <button class="btn-sell" onclick="executeManualTrade('SELL')">Manual SELL</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Open Active Trades</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>Type</th>
+            <th>Lots</th>
+            <th>SL (1x)</th>
+            <th>TP (3x)</th>
+            <th>Live P&L ($)</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="active-trades-body">
+          <tr><td colspan="7" style="text-align: center; color: #64748b;">No open trades active.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-analytics" class="tab-content">
+    <div class="card">
+      <h2>Trade History Log</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Asset</th>
+            <th>Type</th>
+            <th>Lots</th>
+            <th>Outcome Reason</th>
+            <th>Realized P&L ($)</th>
+          </tr>
+        </thead>
+        <tbody id="trade-history-body">
+          <tr><td colspan="6" style="text-align: center; color: #64748b;">No closed trades yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Complete Asset List across all market categories
+    const assets = {
+      crypto: [
+        { name: "BTC/USDT (Bitcoin)", symbol: "BINANCE:BTCUSDT" },
+        { name: "ETH/USDT (Ethereum)", symbol: "BINANCE:ETHUSDT" },
+        { name: "SOL/USDT (Solana)", symbol: "BINANCE:SOLUSDT" },
+        { name: "BNB/USDT (Binance Coin)", symbol: "BINANCE:BNBUSDT" },
+        { name: "XRP/USDT (Ripple)", symbol: "BINANCE:XRPUSDT" },
+        { name: "ADA/USDT (Cardano)", symbol: "BINANCE:ADAUSDT" },
+        { name: "DOGE/USDT (Dogecoin)", symbol: "BINANCE:DOGEUSDT" },
+        { name: "AVAX/USDT (Avalanche)", symbol: "BINANCE:AVAXUSDT" },
+        { name: "DOT/USDT (Polkadot)", symbol: "BINANCE:DOTUSDT" },
+        { name: "LINK/USDT (Chainlink)", symbol: "BINANCE:LINKUSDT" },
+        { name: "MATIC/USDT (Polygon)", symbol: "BINANCE:MATICUSDT" },
+        { name: "SHIB/USDT (Shiba Inu)", symbol: "BINANCE:SHIBUSDT" },
+        { name: "LTC/USDT (Litecoin)", symbol: "BINANCE:LTCUSDT" },
+        { name: "PEPE/USDT (Pepe)", symbol: "BINANCE:PEPEUSDT" },
+        { name: "NEAR/USDT (Near Protocol)", symbol: "BINANCE:NEARUSDT" },
+        { name: "APT/USDT (Aptos)", symbol: "BINANCE:APTUSDT" },
+        { name: "SUI/USDT (Sui)", symbol: "BINANCE:SUIUSDT" },
+        { name: "UNI/USDT (Uniswap)", symbol: "BINANCE:UNIUSDT" }
+      ],
+      forex: [
+        { name: "EUR/USD (Euro / US Dollar)", symbol: "FX:EURUSD" },
+        { name: "GBP/USD (British Pound / US Dollar)", symbol: "FX:GBPUSD" },
+        { name: "USD/JPY (US Dollar / Japanese Yen)", symbol: "FX:USDJPY" },
+        { name: "AUD/USD (Australian Dollar / US Dollar)", symbol: "FX:AUDUSD" },
+        { name: "USD/CAD (US Dollar / Canadian Dollar)", symbol: "FX:USDCAD" },
+        { name: "USD/CHF (US Dollar / Swiss Franc)", symbol: "FX:USDCHF" },
+        { name: "NZD/USD (New Zealand Dollar / US Dollar)", symbol: "FX:NZDUSD" },
+        { name: "EUR/GBP (Euro / British Pound)", symbol: "FX:EURGBP" },
+        { name: "EUR/JPY (Euro / Japanese Yen)", symbol: "FX:EURJPY" },
+        { name: "GBP/JPY (British Pound / Japanese Yen)", symbol: "FX:GBPJPY" }
+      ],
+      metals: [
+        { name: "XAU/USD (Gold)", symbol: "OANDA:XAUUSD" },
+        { name: "XAG/USD (Silver)", symbol: "OANDA:XAGUSD" },
+        { name: "USOIL (Crude Oil WTI)", symbol: "TVC:USOIL" },
+        { name: "UKOIL (Brent Crude Oil)", symbol: "TVC:UKOIL" },
+        { name: "NGAS (Natural Gas)", symbol: "TVC:NGAS" },
+        { name: "COPPER (Copper)", symbol: "TVC:COPPER" },
+        { name: "PLATINUM (Platinum)", symbol: "OANDA:XPTUSD" }
+      ],
+      stocks: [
+        { name: "NVDA (NVIDIA Corporation)", symbol: "NASDAQ:NVDA" },
+        { name: "AAPL (Apple Inc.)", symbol: "NASDAQ:AAPL" },
+        { name: "TSLA (Tesla Inc.)", symbol: "NASDAQ:TSLA" },
+        { name: "MSFT (Microsoft)", symbol: "NASDAQ:MSFT" },
+        { name: "AMZN (Amazon.com)", symbol: "NASDAQ:AMZN" },
+        { name: "GOOGL (Alphabet Inc.)", symbol: "NASDAQ:GOOGL" },
+        { name: "META (Meta Platforms)", symbol: "NASDAQ:META" },
+        { name: "SPX500 (S&P 500 Index)", symbol: "FOREXCOM:SPXUSD" },
+        { name: "NAS100 (Nasdaq 100 Index)", symbol: "FOREXCOM:NSXUSD" },
+        { name: "US30 (Dow Jones Industrial)", symbol: "FOREXCOM:DJI" }
+      ]
+    };
+
+    let totalCapital = 10000.00;
+    let isBotActive = false;
+    let scanInterval = null;
+    let pnlInterval = null;
+    let activePositions = [];
+    let tradeHistory = [];
+    const MAX_OPEN_TRADES = 2;
+
+    function switchTab(tabId, btnElem) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      btnElem.classList.add('active');
+    }
+
+    function updateCapitalFromInput() {
+      const val = parseFloat(document.getElementById('input-total-capital').value);
+      if(!isNaN(val) && val > 0) {
+        totalCapital = val;
+        updateMetricsUI();
+      }
+    }
+
+    function getKotegawaMetrics() {
+      const activeCapital = totalCapital * 0.50;
+      const backupCapital = totalCapital * 0.50;
+      const maxRiskPerTrade = activeCapital * 0.02;
+      const takeProfitTarget = maxRiskPerTrade * 3;
+      return { activeCapital, backupCapital, maxRiskPerTrade, takeProfitTarget };
+    }
+
+    function updateAssetDropdown() {
+      const category = document.getElementById('asset-category').value;
+      const symbolSelect = document.getElementById('symbol-select');
+      symbolSelect.innerHTML = '';
+
+      if (assets[category]) {
+        assets[category].forEach(item => {
+          let opt = document.createElement('option');
+          opt.value = item.symbol;
+          opt.innerText = item.name;
+          symbolSelect.appendChild(opt);
+        });
+      }
+
+      changeTradingViewSymbol();
+    }
+
+    function changeTradingViewSymbol() {
+      const currentSymbol = document.getElementById('symbol-select').value;
+      if(currentSymbol) {
+        const iframe = document.getElementById('tv_iframe');
+        const formattedSymbol = encodeURIComponent(currentSymbol);
+        iframe.src = `https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&symbol=${formattedSymbol}&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=131722&theme=dark&style=1&timezone=Etc%2FUTC`;
+      }
+    }
+
+    function toggleBot() {
+      isBotActive = document.getElementById('bot-toggle').checked;
+      const label = document.getElementById('status-label');
+      label.innerText = isBotActive ? "AUTO BOT ON" : "AUTO BOT OFF";
+      label.style.color = isBotActive ? "#22c55e" : "#ef4444";
+
+      const workingStatus = document.getElementById('bot-working-status');
+
+      if(isBotActive) {
+        workingStatus.innerText = "RUNNING INDICATOR & RISK SCANNER...";
+        workingStatus.style.color = "#38bdf8";
+        startAutoScanning();
+      } else {
+        clearInterval(scanInterval);
+        workingStatus.innerText = "BOT PAUSED";
+        workingStatus.style.color = "#ef4444";
+        document.getElementById('ai-reasoning').innerText = "[SYSTEM LOG]: Bot paused by user.";
+      }
+    }
+
+    function startAutoScanning() {
+      scanInterval = setInterval(() => {
+        if(!isBotActive) return;
+
+        if(activePositions.length >= MAX_OPEN_TRADES) {
+          document.getElementById('ai-reasoning').innerText = `[RISK GUARD]: Max limit of ${MAX_OPEN_TRADES} open trades active. Monitoring risk limits...`;
+          return;
+        }
+
+        const allCategories = Object.keys(assets);
+        const randomCat = allCategories[Math.floor(Math.random() * allCategories.length)];
+        const selectedAsset = assets[randomCat][Math.floor(Math.random() * assets[randomCat].length)];
+
+        const rsiVal = (Math.random() * 60) + 20;
+        const priceVsEMA200 = Math.random() > 0.45 ? 'ABOVE' : 'BELOW';
+        const atrFilter = Math.random() > 0.3;
+
+        if(priceVsEMA200 === 'ABOVE' && rsiVal < 35 && atrFilter) {
+          triggerTrade(selectedAsset.name, 'BUY', `200 EMA Uptrend + RSI Oversold (${rsiVal.toFixed(1)})`);
+        } 
+        else if(priceVsEMA200 === 'BELOW' && rsiVal > 65 && atrFilter) {
+          triggerTrade(selectedAsset.name, 'SELL', `200 EMA Downtrend + RSI Overbought (${rsiVal.toFixed(1)})`);
+        } 
+        else {
+          document.getElementById('ai-reasoning').innerText = `[SCANNING]: ${selectedAsset.name} | EMA 200: ${priceVsEMA200} | RSI: ${rsiVal.toFixed(1)} | Waiting for strategy match...`;
+        }
+      }, 3500);
+    }
+
+    function triggerTrade(assetName, type, reasonLog = "Indicator Strategy Signal") {
+      const metrics = getKotegawaMetrics();
+      const calculatedLot = (metrics.maxRiskPerTrade / 1000).toFixed(2);
+
+      const newTrade = {
+        id: Date.now(),
+        asset: assetName,
+        type: type,
+        lots: Math.max(0.01, calculatedLot),
+        sl: -metrics.maxRiskPerTrade,
+        tp: metrics.takeProfitTarget,
+        pnl: 0.00
+      };
+
+      activePositions.unshift(newTrade);
+      document.getElementById('ai-reasoning').innerText = `[ORDER PLACED]: ${type} on ${assetName} via ${reasonLog}. SL: -$${metrics.maxRiskPerTrade.toFixed(2)} | TP: +$${metrics.takeProfitTarget.toFixed(2)} (1:3 R:R)`;
+      renderPositions();
+    }
+
+    function executeManualTrade(type) {
+      if(activePositions.length >= MAX_OPEN_TRADES) {
+        alert(`Maximum ${MAX_OPEN_TRADES} active trades allowed simultaneously.`);
+        return;
+      }
+
+      const selectElem = document.getElementById('symbol-select');
+      const assetName = selectElem.options[selectElem.selectedIndex] ? selectElem.options[selectElem.selectedIndex].text : "BTC/USDT (Bitcoin)";
+      triggerTrade(assetName, type, "Manual Trade Trigger");
+    }
+
+    function close
