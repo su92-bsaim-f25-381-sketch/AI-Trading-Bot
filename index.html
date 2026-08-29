@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TradePulse AI — Smart Quant AI Bot</title>
+  <title>TradePulse AI — Multi-Asset Quant Terminal</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     body { background-color: #0b0e14; color: #e1e7ef; padding: 12px; }
@@ -21,34 +21,18 @@
     .card { background: #131722; border-radius: 8px; padding: 12px; border: 1px solid #1e293b; margin-bottom: 12px; }
     .card h2 { font-size: 0.82rem; margin-bottom: 8px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
     
-    .controls-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 8px; }
-    select, button { width: 100%; padding: 10px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+    .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    select, button, input { width: 100%; padding: 10px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 6px; font-size: 0.85rem; font-weight: 600; }
     
-    .price-row { display: flex; justify-content: space-between; align-items: baseline; margin: 6px 0 10px 0; }
-    .price-display { font-size: 1.8rem; font-weight: bold; color: #38bdf8; }
-    .price-change { font-size: 0.85rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
-    .up { color: #22c55e; background: rgba(34, 197, 94, 0.12); }
-    .down { color: #ef4444; background: rgba(239, 68, 68, 0.12); }
-
-    .tf-selector { display: flex; gap: 6px; margin-bottom: 8px; }
-    .tf-btn { padding: 6px; font-size: 0.75rem; background: #1e293b; border: 1px solid #334155; color: #94a3b8; border-radius: 4px; flex: 1; text-align: center; cursor: pointer; }
-    .tf-btn.active { background: #38bdf8; color: #000; font-weight: bold; border-color: #38bdf8; }
-
-    .chart-box { height: 320px; width: 100%; border-radius: 6px; overflow: hidden; background: #07090e; border: 1px solid #1e293b; position: relative; }
-    canvas { width: 100%; height: 100%; display: block; }
-    
-    .pressure-container { margin: 8px 0; }
-    .pressure-bar-bg { background: #ef4444; height: 10px; border-radius: 5px; overflow: hidden; display: flex; }
-    .pressure-buy-fill { background: #22c55e; height: 100%; width: 50%; transition: width 0.4s ease; }
-    .pressure-labels { display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: 4px; font-weight: bold; }
+    .chart-box { height: 480px; width: 100%; border-radius: 6px; overflow: hidden; border: 1px solid #1e293b; }
     
     .signal-box { background: #1e293b; padding: 12px; border-radius: 6px; margin: 8px 0; }
     .ai-think-box { font-size: 0.8rem; color: #cbd5e1; background: #0f172a; padding: 8px; border-radius: 4px; border-left: 3px solid #38bdf8; margin-top: 8px; line-height: 1.4; }
-    .stats-row { display: flex; justify-content: space-between; font-size: 0.85rem; color: #94a3b8; margin-top: 6px; }
+    .stats-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #94a3b8; margin-top: 6px; }
     
     .btn-group { display: flex; gap: 8px; margin-top: 8px; }
-    .btn-buy { background: #22c55e; color: #000; padding: 12px; border: none; border-radius: 6px; font-weight: bold; width: 50%; }
-    .btn-sell { background: #ef4444; color: #fff; padding: 12px; border: none; border-radius: 6px; font-weight: bold; width: 50%; }
+    .btn-buy { background: #22c55e; color: #000; padding: 12px; border: none; border-radius: 6px; font-weight: bold; width: 50%; cursor: pointer; }
+    .btn-sell { background: #ef4444; color: #fff; padding: 12px; border: none; border-radius: 6px; font-weight: bold; width: 50%; cursor: pointer; }
 
     table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.78rem; }
     th, td { text-align: left; padding: 6px; border-bottom: 1px solid #1e293b; }
@@ -58,7 +42,7 @@
 <body>
 
   <div class="header">
-    <h1>🧠 TradePulse Smart AI Bot</h1>
+    <h1>📈 TradePulse Multi-Asset Terminal</h1>
     <div class="switch-container">
       <span id="status-label" style="color: #ef4444; font-size:0.8rem; font-weight:bold;">AUTO BOT OFF</span>
       <label class="switch">
@@ -69,274 +53,148 @@
   </div>
 
   <div class="card">
-    <h2>Live Market Candlestick Chart</h2>
+    <h2>TradingView Live Chart & Markets</h2>
     <div class="controls-grid">
-      <select id="pair-select" onchange="changePair()">
-        <option value="BTCUSDT" selected>BTC/USDT (Bitcoin)</option>
-        <option value="ETHUSDT">ETH/USDT (Ethereum)</option>
-        <option value="SOLUSDT">SOL/USDT (Solana)</option>
-        <option value="BNBUSDT">BNB/USDT (Binance)</option>
-      </select>
+      <div>
+        <label style="font-size:0.7rem; color:#64748b;">ASSET CATEGORY</label>
+        <select id="asset-category" onchange="updateAssetDropdown()">
+          <option value="crypto" selected>Crypto (BTC, ETH, SOL...)</option>
+          <option value="forex">Forex (EUR/USD, GBP/USD...)</option>
+          <option value="metals">Metals & Commodities (Gold, Silver, Oil)</option>
+          <option value="stocks">Shares & Indices (Apple, Tesla, NVDA, S&P500)</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:0.7rem; color:#64748b;">SELECT SYMBOL</label>
+        <select id="symbol-select" onchange="changeTradingViewSymbol()"></select>
+      </div>
     </div>
 
-    <div class="tf-selector">
-      <div class="tf-btn active" onclick="setTimeframe('1m', this)">1M</div>
-      <div class="tf-btn" onclick="setTimeframe('5m', this)">5M</div>
-      <div class="tf-btn" onclick="setTimeframe('15m', this)">15M</div>
-      <div class="tf-btn" onclick="setTimeframe('1h', this)">1H</div>
-      <div class="tf-btn" onclick="setTimeframe('4h', this)">4H</div>
-      <div class="tf-btn" onclick="setTimeframe('1d', this)">1D</div>
-    </div>
-    
-    <div class="price-row">
-      <div class="price-display" id="live-price">Fetching...</div>
-      <div class="price-change up" id="price-change">+0.00%</div>
-    </div>
-    
-    <div class="chart-box">
-      <canvas id="candleCanvas"></canvas>
-    </div>
+    <div class="chart-box" id="tradingview_chart_container"></div>
   </div>
 
   <div class="card">
-    <h2>Volume & Order Flow Analysis</h2>
-    <div class="pressure-container">
-      <div class="pressure-bar-bg">
-        <div class="pressure-buy-fill" id="buy-pressure-bar"></div>
-      </div>
-      <div class="pressure-labels">
-        <span style="color: #22c55e;" id="buy-pressure-text">Buyers: 50%</span>
-        <span style="color: #ef4444;" id="sell-pressure-text">Sellers: 50%</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>AI Deep-Thinking Engine</h2>
+    <h2>Quant Engine Analysis</h2>
     <div class="signal-box">
       <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-size:0.85rem;">Decision State:</span>
-        <span id="ai-decision" style="color: #eab308; font-weight: bold;">ANALYZING...</span>
+        <span style="font-size:0.85rem;">Strategy Status:</span>
+        <span id="ai-decision" style="color: #22c55e; font-weight: bold;">ACTIVE SCANNING</span>
       </div>
       <div class="ai-think-box" id="ai-reasoning">
-        🤖 AI is analyzing EMA 9/21, RSI momentum, and Support/Resistance levels...
+        🤖 TradingView Advanced Technical Engine loaded with live indicators (RSI, Moving Averages, Volume Profile).
       </div>
     </div>
-
-    <div class="stats-row">
-      <span>RSI Momentum (14):</span>
-      <strong id="rsi-val" style="color: #38bdf8;">--</strong>
-    </div>
-    <div class="stats-row">
-      <span>EMA Trend (9 / 21):</span>
-      <strong id="ema-val" style="color: #38bdf8;">-- / --</strong>
-    </div>
-    <div class="stats-row">
-      <span>Dynamic Support / Resistance:</span>
-      <strong><span id="support-val" style="color: #22c55e;">--</span> / <span id="resistance-val" style="color: #ef4444;">--</span></strong>
-    </div>
   </div>
 
   <div class="card">
-    <h2>Account Risk & Live Trades</h2>
-    <div class="stats-row">
-      <span>Live Wallet Balance:</span>
-      <strong id="wallet-balance" style="color: #22c55e; font-size: 1rem;">$10,000.00</strong>
-    </div>
-    <div class="stats-row">
-      <span>Calculated Lot Size:</span>
-      <strong id="auto-lot" style="color: #38bdf8;">0.10 Lots</strong>
+    <h2>Account Risk & Lot Execution</h2>
+    <div class="controls-grid">
+      <div>
+        <label style="font-size:0.7rem; color:#64748b;">WALLET BALANCE ($)</label>
+        <input type="number" id="wallet-balance-input" value="10000" onchange="updateAccountData()">
+      </div>
+      <div>
+        <label style="font-size:0.7rem; color:#64748b;">LOT SIZE (CONTRACTS)</label>
+        <input type="number" id="lot-size-input" value="0.10" step="0.01" min="0.01">
+      </div>
     </div>
     <div class="btn-group">
-      <button class="btn-buy" onclick="executeTrade('BUY', 'Manual Execution')">BUY</button>
-      <button class="btn-sell" onclick="executeTrade('SELL', 'Manual Execution')">SELL</button>
+      <button class="btn-buy" onclick="executeManualTrade('BUY')">Execute BUY</button>
+      <button class="btn-sell" onclick="executeManualTrade('SELL')">Execute SELL</button>
     </div>
   </div>
 
   <div class="card">
-    <h2>Active AI Positions</h2>
+    <h2>Active Lot Positions</h2>
     <table>
       <thead>
         <tr>
-          <th>Pair</th>
+          <th>Asset</th>
           <th>Type</th>
-          <th>Entry Price</th>
-          <th>Current Price</th>
-          <th>PnL ($)</th>
+          <th>Lots</th>
+          <th>Entry</th>
+          <th>Status</th>
         </tr>
       </thead>
       <tbody id="active-trades-body">
-        <tr><td colspan="5" style="text-align: center; color: #64748b;">No active trades open.</td></tr>
+        <tr><td colspan="5" style="text-align: center; color: #64748b;">No active positions.</td></tr>
       </tbody>
     </table>
   </div>
 
+  <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
   <script>
-    let symbol = "BTCUSDT";
-    let timeframe = "1m";
+    const assets = {
+      crypto: [
+        { name: "BTC/USDT (Bitcoin)", symbol: "BINANCE:BTCUSDT" },
+        { name: "ETH/USDT (Ethereum)", symbol: "BINANCE:ETHUSDT" },
+        { name: "SOL/USDT (Solana)", symbol: "BINANCE:SOLUSDT" },
+        { name: "BNB/USDT (Binance)", symbol: "BINANCE:BNBUSDT" },
+        { name: "XRP/USDT (Ripple)", symbol: "BINANCE:XRPUSDT" }
+      ],
+      forex: [
+        { name: "EUR/USD (Euro)", symbol: "FX:EURUSD" },
+        { name: "GBP/USD (Pound)", symbol: "FX:GBPUSD" },
+        { name: "USD/JPY (Yen)", symbol: "FX:USDJPY" },
+        { name: "AUD/USD (Aussie)", symbol: "FX:AUDUSD" }
+      ],
+      metals: [
+        { name: "XAU/USD (Gold)", symbol: "OANDA:XAUUSD" },
+        { name: "XAG/USD (Silver)", symbol: "OANDA:XAGUSD" },
+        { name: "USOIL (WTI Crude)", symbol: "TVC:USOIL" }
+      ],
+      stocks: [
+        { name: "AAPL (Apple Inc.)", symbol: "NASDAQ:AAPL" },
+        { name: "TSLA (Tesla Motors)", symbol: "NASDAQ:TSLA" },
+        { name: "NVDA (NVIDIA)", symbol: "NASDAQ:NVDA" },
+        { name: "S&P 500 Index", symbol: "FOREXCOM:SPXUSD" }
+      ]
+    };
+
+    let currentSymbol = "BINANCE:BTCUSDT";
     let isBotActive = false;
-    let balance = 10000.00;
-    let currentPrice = 0;
-    let candleData = [];
-    let activeTrades = [];
+    let activePositions = [];
 
-    const canvas = document.getElementById('candleCanvas');
-    const ctx = canvas.getContext('2d');
+    function updateAssetDropdown() {
+      const category = document.getElementById('asset-category').value;
+      const symbolSelect = document.getElementById('symbol-select');
+      symbolSelect.innerHTML = '';
 
-    function resizeCanvas() {
-      canvas.width = canvas.parentElement.clientWidth;
-      canvas.height = canvas.parentElement.clientHeight;
-      drawCandlestickChart();
-    }
-    window.addEventListener('resize', resizeCanvas);
-
-    async function loadHistoricalData() {
-      try {
-        const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${timeframe}&limit=50`);
-        const data = await res.json();
-        
-        candleData = data.map(d => ({
-          open: parseFloat(d[1]),
-          high: parseFloat(d[2]),
-          low: parseFloat(d[3]),
-          close: parseFloat(d[4]),
-          volume: parseFloat(d[5])
-        }));
-
-        currentPrice = candleData[candleData.length - 1].close;
-        const openPrice = candleData[0].open;
-        const pDiff = ((currentPrice - openPrice) / openPrice) * 100;
-        
-        const changeElem = document.getElementById('price-change');
-        changeElem.innerText = (pDiff >= 0 ? '+' : '') + pDiff.toFixed(2) + '%';
-        changeElem.className = 'price-change ' + (pDiff >= 0 ? 'up' : 'down');
-
-        document.getElementById('live-price').innerText = '$' + currentPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        
-        drawCandlestickChart();
-        runSmartAIEngine();
-        evaluateTrades();
-      } catch (e) {
-        console.error("Feed Error", e);
-      }
-    }
-
-    function drawCandlestickChart() {
-      if (!candleData || candleData.length === 0) return;
-      
-      canvas.width = canvas.parentElement.clientWidth;
-      canvas.height = canvas.parentElement.clientHeight;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      const highs = candleData.map(c => c.high);
-      const lows = candleData.map(c => c.low);
-      const maxP = Math.max(...highs);
-      const minP = Math.min(...lows);
-      const priceRange = maxP - minP || 1;
-
-      const padding = 15;
-      const chartWidth = canvas.width - (padding * 2);
-      const chartHeight = canvas.height - (padding * 2);
-      const candleWidth = (chartWidth / candleData.length) * 0.65;
-      const gap = (chartWidth / candleData.length) * 0.35;
-
-      candleData.forEach((c, i) => {
-        const x = padding + i * (candleWidth + gap) + candleWidth / 2;
-        const isGreen = c.close >= c.open;
-        
-        const highY = canvas.height - padding - ((c.high - minP) / priceRange) * chartHeight;
-        const lowY = canvas.height - padding - ((c.low - minP) / priceRange) * chartHeight;
-        const openY = canvas.height - padding - ((c.open - minP) / priceRange) * chartHeight;
-        const closeY = canvas.height - padding - ((c.close - minP) / priceRange) * chartHeight;
-
-        // Draw Wick
-        ctx.strokeStyle = isGreen ? '#22c55e' : '#ef4444';
-        ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        ctx.moveTo(x, highY);
-        ctx.lineTo(x, lowY);
-        ctx.stroke();
-
-        // Draw Body
-        ctx.fillStyle = isGreen ? '#22c55e' : '#ef4444';
-        const bodyY = Math.min(openY, closeY);
-        const bodyHeight = Math.max(Math.abs(openY - closeY), 2);
-        ctx.fillRect(x - candleWidth / 2, bodyY, candleWidth, bodyHeight);
+      assets[category].forEach(item => {
+        let opt = document.createElement('option');
+        opt.value = item.symbol;
+        opt.innerText = item.name;
+        symbolSelect.appendChild(opt);
       });
+
+      changeTradingViewSymbol();
     }
 
-    function calculateEMA(period) {
-      let k = 2 / (period + 1);
-      let ema = candleData[0].close;
-      for (let i = 1; i < candleData.length; i++) {
-        ema = (candleData[i].close * k) + (ema * (1 - k));
-      }
-      return ema;
+    function changeTradingViewSymbol() {
+      currentSymbol = document.getElementById('symbol-select').value;
+      loadTradingViewWidget(currentSymbol);
     }
 
-    function calculateRSI(period = 14) {
-      let gains = 0, losses = 0;
-      for (let i = candleData.length - period; i < candleData.length; i++) {
-        let diff = candleData[i].close - candleData[i - 1].close;
-        if (diff >= 0) gains += diff;
-        else losses -= diff;
-      }
-      let avgGain = gains / period;
-      let avgLoss = losses / period;
-      if (avgLoss === 0) return 100;
-      let rs = avgGain / avgLoss;
-      return 100 - (100 / (1 + rs));
-    }
-
-    function runSmartAIEngine() {
-      if (candleData.length < 25) return;
-
-      const ema9 = calculateEMA(9);
-      const ema21 = calculateEMA(21);
-      const rsi = calculateRSI(14);
-      
-      const highs = candleData.map(c => c.high);
-      const lows = candleData.map(c => c.low);
-      const maxH = Math.max(...highs.slice(-20));
-      const minL = Math.min(...lows.slice(-20));
-
-      document.getElementById('rsi-val').innerText = rsi.toFixed(1);
-      document.getElementById('ema-val').innerText = `$${ema9.toFixed(1)} / $${ema21.toFixed(1)}`;
-      document.getElementById('support-val').innerText = '$' + minL.toFixed(2);
-      document.getElementById('resistance-val').innerText = '$' + maxH.toFixed(2);
-
-      let buyPressure = ema9 > ema21 ? Math.min(85, Math.floor(rsi + 15)) : Math.max(15, Math.floor(rsi - 15));
-      document.getElementById('buy-pressure-bar').style.width = buyPressure + '%';
-      document.getElementById('buy-pressure-text').innerText = `Buyers: ${buyPressure}%`;
-      document.getElementById('sell-pressure-text').innerText = `Sellers: ${100 - buyPressure}%`;
-
-      const signalElem = document.getElementById('ai-decision');
-      const reasonElem = document.getElementById('ai-reasoning');
-
-      // AI Logic Decision Matrix
-      if (ema9 > ema21 && rsi > 52 && currentPrice > minL) {
-        signalElem.innerText = "BUY CONFIRMED";
-        signalElem.style.color = "#22c55e";
-        reasonElem.innerHTML = `💡 <b>AI Thought:</b> EMA9 ($${ema9.toFixed(1)}) crossed ABOVE EMA21 ($${ema21.toFixed(1)}). RSI is bullish at ${rsi.toFixed(1)}. High probability <b>BUY</b> setup detected!`;
-        
-        if (isBotActive && activeTrades.length === 0) {
-          executeTrade('BUY', 'AI Cross + RSI Bullish');
-        }
-      } 
-      else if (ema9 < ema21 && rsi < 48 && currentPrice < maxH) {
-        signalElem.innerText = "SELL CONFIRMED";
-        signalElem.style.color = "#ef4444";
-        reasonElem.innerHTML = `💡 <b>AI Thought:</b> EMA9 ($${ema9.toFixed(1)}) crossed BELOW EMA21 ($${ema21.toFixed(1)}). RSI is bearish at ${rsi.toFixed(1)}. High probability <b>SELL</b> setup detected!`;
-        
-        if (isBotActive && activeTrades.length === 0) {
-          executeTrade('SELL', 'AI Bearish Crossover');
-        }
-      } 
-      else {
-        signalElem.innerText = "HOLD / NO ENTRY";
-        signalElem.style.color = "#eab308";
-        reasonElem.innerHTML = `💡 <b>AI Thought:</b> Market is consolidating. RSI is neutral (${rsi.toFixed(1)}). Waiting for clean breakout.`;
-      }
+    function loadTradingViewWidget(symbol) {
+      document.getElementById('tradingview_chart_container').innerHTML = '';
+      new TradingView.widget({
+        "autosize": true,
+        "symbol": symbol,
+        "interval": "15",
+        "timezone": "Etc/UTC",
+        "theme": "dark",
+        "style": "1",
+        "locale": "en",
+        "toolbar_bg": "#131722",
+        "enable_publishing": false,
+        "allow_symbol_change": true,
+        "container_id": "tradingview_chart_container",
+        "hide_side_toolbar": false,
+        "studies": [
+          "STD;RSI",
+          "STD;EMA"
+        ]
+      });
     }
 
     function toggleBot() {
@@ -346,57 +204,42 @@
       label.style.color = isBotActive ? "#22c55e" : "#ef4444";
     }
 
-    function changePair() {
-      symbol = document.getElementById('pair-select').value;
-      loadHistoricalData();
-    }
+    function executeManualTrade(type) {
+      const lot = document.getElementById('lot-size-input').value;
+      const selectElem = document.getElementById('symbol-select');
+      const assetName = selectElem.options[selectElem.selectedIndex].text;
 
-    function setTimeframe(tf, elem) {
-      timeframe = tf;
-      document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
-      elem.classList.add('active');
-      loadHistoricalData();
-    }
-
-    function executeTrade(type, reason) {
-      if (activeTrades.length >= 2 || currentPrice === 0) return;
-      activeTrades.push({
-        id: Date.now(),
-        pair: symbol,
+      activePositions.push({
+        asset: assetName,
         type: type,
-        entry: currentPrice,
-        reason: reason
+        lots: lot,
+        entry: "MARKET",
+        status: "RUNNING"
       });
-      renderTrades();
+      renderPositions();
     }
 
-    function evaluateTrades() {
-      renderTrades();
-    }
-
-    function renderTrades() {
+    function renderPositions() {
       const tbody = document.getElementById('active-trades-body');
       tbody.innerHTML = '';
-      if (activeTrades.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b;">No active trades open.</td></tr>';
+      if (activePositions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b;">No active positions.</td></tr>';
         return;
       }
-      activeTrades.forEach(t => {
-        let pnl = t.type === 'BUY' ? (currentPrice - t.entry) * 0.1 * 10 : (t.entry - currentPrice) * 0.1 * 10;
+      activePositions.forEach(pos => {
         let row = `<tr>
-          <td>${t.pair}</td>
-          <td style="color:${t.type==='BUY'?'#22c55e':'#ef4444'}">${t.type}</td>
-          <td>$${t.entry.toFixed(2)}</td>
-          <td>$${currentPrice.toFixed(2)}</td>
-          <td style="color:${pnl>=0?'#22c55e':'#ef4444'}">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}</td>
+          <td>${pos.asset}</td>
+          <td style="color:${pos.type==='BUY'?'#22c55e':'#ef4444'}; font-weight:bold;">${pos.type}</td>
+          <td>${pos.lots} Lots</td>
+          <td>${pos.entry}</td>
+          <td style="color:#38bdf8;">${pos.status}</td>
         </tr>`;
         tbody.innerHTML += row;
       });
     }
 
     window.onload = () => {
-      loadHistoricalData();
-      setInterval(loadHistoricalData, 2000);
+      updateAssetDropdown();
     };
   </script>
 </body>
