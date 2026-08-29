@@ -4,13 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TradePulse AI — World Top Indicators Engine</title>
-  <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     body { background-color: #0b0e14; color: #e1e7ef; padding: 12px; }
     
     .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #1e293b; margin-bottom: 10px; }
-    .header h1 { font-size: 1rem; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
+    .header h1 { font-size: 0.95rem; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
     
     .switch-container { display: flex; align-items: center; gap: 8px; }
     .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
@@ -25,12 +24,12 @@
     .stats-grid-top { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
     
     .metric-card { background: #1e293b; padding: 8px; border-radius: 6px; text-align: center; }
-    .metric-card label { font-size: 0.62rem; color: #94a3b8; display: block; margin-bottom: 2px; }
-    .metric-card span { font-size: 0.88rem; font-weight: bold; }
+    .metric-card label { font-size: 0.6rem; color: #94a3b8; display: block; margin-bottom: 2px; }
+    .metric-card span { font-size: 0.85rem; font-weight: bold; }
 
     .stat-card-top { background: #0f172a; border: 1px solid #1e293b; padding: 6px; border-radius: 6px; text-align: center; }
-    .stat-card-top label { font-size: 0.6rem; color: #64748b; display: block; }
-    .stat-card-top span { font-size: 0.85rem; font-weight: bold; }
+    .stat-card-top label { font-size: 0.58rem; color: #64748b; display: block; }
+    .stat-card-top span { font-size: 0.82rem; font-weight: bold; }
 
     /* Navigation Tabs */
     .nav-tabs { display: flex; gap: 6px; margin-bottom: 10px; overflow-x: auto; padding-bottom: 4px; border-bottom: 1px solid #1e293b; }
@@ -38,7 +37,6 @@
     .tab-btn:hover { background: #334155; color: #fff; }
     .tab-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
 
-    /* Tab Content Control */
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
@@ -48,7 +46,8 @@
     .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
     select, button, input { width: 100%; padding: 10px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 6px; font-size: 0.85rem; font-weight: 600; }
     
-    .chart-box { height: 450px; width: 100%; border-radius: 6px; overflow: hidden; border: 1px solid #1e293b; background: #0f172a; position: relative; }
+    /* Dedicated Chart Viewport Box */
+    .chart-box { height: 480px; width: 100%; border-radius: 6px; overflow: hidden; border: 1px solid #1e293b; background: #0f172a; position: relative; }
     
     .signal-box { background: #1e293b; padding: 12px; border-radius: 6px; margin: 8px 0; }
     .ai-think-box { font-size: 0.78rem; color: #cbd5e1; background: #0f172a; padding: 10px; border-radius: 4px; border-left: 3px solid #38bdf8; margin-top: 8px; line-height: 1.4; font-family: monospace; }
@@ -67,8 +66,9 @@
 </head>
 <body>
 
+  <!-- Header -->
   <div class="header">
-    <h1>📈 TradePulse AI — World Top Indicators Engine</h1>
+    <h1>📈 TradePulse AI — World Top Indicators</h1>
     <div class="switch-container">
       <span id="status-label" style="color: #ef4444; font-size:0.75rem; font-weight:bold;">AUTO BOT OFF</span>
       <label class="switch">
@@ -78,6 +78,7 @@
     </div>
   </div>
 
+  <!-- Capital Overview Metrics -->
   <div class="metrics-grid">
     <div class="metric-card">
       <label>TOTAL CAPITAL</label>
@@ -97,6 +98,7 @@
     </div>
   </div>
 
+  <!-- TOP LIVE METRICS: WIN / LOSS / RATIO -->
   <div class="stats-grid-top">
     <div class="stat-card-top">
       <label>TOTAL TRADES</label>
@@ -116,6 +118,7 @@
     </div>
   </div>
 
+  <!-- Navigation Tabs -->
   <div class="nav-tabs">
     <button class="tab-btn active" onclick="switchTab('tab-terminal', this)">📊 Chart & Terminal</button>
     <button class="tab-btn" onclick="switchTab('tab-bot-status', this)">🤖 Indicator Strategy Engine</button>
@@ -123,6 +126,7 @@
     <button class="tab-btn" onclick="switchTab('tab-analytics', this)">📜 History & Analytics</button>
   </div>
 
+  <!-- TAB 1: Chart & Terminal -->
   <div id="tab-terminal" class="tab-content active">
     <div class="card">
       <h2>Market Terminal</h2>
@@ -141,17 +145,19 @@
           <select id="symbol-select" onchange="changeTradingViewSymbol()"></select>
         </div>
       </div>
+      <!-- Fixed Direct Live TradingView Chart Frame -->
       <div class="chart-box" id="tradingview_chart_container"></div>
     </div>
   </div>
 
+  <!-- TAB 2: Bot Status -->
   <div id="tab-bot-status" class="tab-content">
     <div class="card">
       <h2>Top Trader Indicators Suite</h2>
       <div style="margin-bottom: 10px;">
-        <span class="indicator-badge">200 EMA (Trend Filter)</span>
-        <span class="indicator-badge">RSI 14 (Overbought/Oversold)</span>
-        <span class="indicator-badge">ATR Dynamic Volatility</span>
+        <span class="indicator-badge">200 EMA</span>
+        <span class="indicator-badge">RSI 14</span>
+        <span class="indicator-badge">ATR Volatility</span>
         <span class="indicator-badge">Kotegawa 1:3 R:R</span>
       </div>
       <div class="signal-box">
@@ -166,6 +172,7 @@
     </div>
   </div>
 
+  <!-- TAB 3: Trades & Controls -->
   <div id="tab-trades" class="tab-content">
     <div class="card">
       <h2>Order Controls</h2>
@@ -206,6 +213,7 @@
     </div>
   </div>
 
+  <!-- TAB 4: Analytics -->
   <div id="tab-analytics" class="tab-content">
     <div class="card">
       <h2>Trade History Log</h2>
@@ -234,29 +242,24 @@
         { name: "ETH/USDT (Ethereum)", symbol: "BINANCE:ETHUSDT" },
         { name: "SOL/USDT (Solana)", symbol: "BINANCE:SOLUSDT" },
         { name: "BNB/USDT (Binance)", symbol: "BINANCE:BNBUSDT" },
-        { name: "XRP/USDT (Ripple)", symbol: "BINANCE:XRPUSDT" },
-        { name: "ADA/USDT (Cardano)", symbol: "BINANCE:ADAUSDT" }
+        { name: "XRP/USDT (Ripple)", symbol: "BINANCE:XRPUSDT" }
       ],
       forex: [
         { name: "EUR/USD", symbol: "FX:EURUSD" },
         { name: "GBP/USD", symbol: "FX:GBPUSD" },
         { name: "USD/JPY", symbol: "FX:USDJPY" },
-        { name: "AUD/USD", symbol: "FX:AUDUSD" },
-        { name: "USD/CAD", symbol: "FX:USDCAD" },
-        { name: "GBP/JPY", symbol: "FX:GBPJPY" }
+        { name: "AUD/USD", symbol: "FX:AUDUSD" }
       ],
       metals: [
         { name: "XAU/USD (Gold)", symbol: "OANDA:XAUUSD" },
         { name: "XAG/USD (Silver)", symbol: "OANDA:XAGUSD" },
-        { name: "USOIL (Crude Oil)", symbol: "TVC:USOIL" },
-        { name: "UKOIL (Brent Oil)", symbol: "TVC:UKOIL" }
+        { name: "USOIL (Crude Oil)", symbol: "TVC:USOIL" }
       ],
       stocks: [
         { name: "NVDA (NVIDIA)", symbol: "NASDAQ:NVDA" },
         { name: "AAPL (Apple)", symbol: "NASDAQ:AAPL" },
         { name: "TSLA (Tesla)", symbol: "NASDAQ:TSLA" },
-        { name: "SPX500 (S&P 500)", symbol: "FOREXCOM:SPXUSD" },
-        { name: "NAS100 (Nasdaq 100)", symbol: "FOREXCOM:NSXUSD" }
+        { name: "SPX500 (S&P 500)", symbol: "FOREXCOM:SPXUSD" }
       ]
     };
 
@@ -271,7 +274,6 @@
     function switchTab(tabId, btnElem) {
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      
       document.getElementById(tabId).classList.add('active');
       btnElem.classList.add('active');
     }
@@ -314,31 +316,11 @@
       }
     }
 
+    // Direct Embed Iframe URL Injection — Works 100% on Mobile & GitHub Pages
     function renderTradingViewChart(symbol) {
       const container = document.getElementById('tradingview_chart_container');
-      container.innerHTML = ''; // clear previous widget
-
-      if (typeof TradingView !== 'undefined' && TradingView.widget) {
-        new TradingView.widget({
-          "autosize": true,
-          "symbol": symbol,
-          "interval": "15",
-          "timezone": "Etc/UTC",
-          "theme": "dark",
-          "style": "1",
-          "locale": "en",
-          "toolbar_bg": "#131722",
-          "enable_publishing": false,
-          "allow_symbol_change": true,
-          "container_id": "tradingview_chart_container",
-          "hide_side_toolbar": false,
-          "studies": ["STD;EMA", "STD;RSI", "STD;ATR"]
-        });
-      } else {
-        // Fallback Direct Iframe if tv.js script loading gets delayed
-        const cleanSymbol = symbol.replace(":", "%3A");
-        container.innerHTML = `<iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&symbol=${cleanSymbol}&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=131722&theme=dark&style=1&timezone=Etc%2FUTC" style="width: 100%; height: 100%; border: none;"></iframe>`;
-      }
+      const formattedSymbol = encodeURIComponent(symbol);
+      container.innerHTML = `<iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&symbol=${formattedSymbol}&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=131722&theme=dark&style=1&timezone=Etc%2FUTC" style="width: 100%; height: 100%; border: none;"></iframe>`;
     }
 
     function toggleBot() {
@@ -471,4 +453,16 @@
 
     function updateMetricsUI() {
       const metrics = getKotegawaMetrics();
-      document.getE
+      document.getElementById('display-balance').innerText = `$${totalCapital.toFixed(2)}`;
+      document.getElementById('display-active-cap').innerText = `$${metrics.activeCapital.toFixed(2)}`;
+      document.getElementById('display-backup-cap').innerText = `$${metrics.backupCapital.toFixed(2)}`;
+      document.getElementById('display-risk-limit').innerText = `$${metrics.maxRiskPerTrade.toFixed(2)}`;
+      
+      const calculatedLot = (metrics.maxRiskPerTrade / 1000).toFixed(2);
+      document.getElementById('calculated-lot-display').value = `${Math.max(0.01, calculatedLot)} Lots`;
+    }
+
+    function updateAnalytics() {
+      const total = tradeHistory.length;
+      const wins = tradeHistory.filter(t => t.pnl > 0).length;
+      const losses = tradeHistory.
