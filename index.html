@@ -20,7 +20,7 @@
     input:checked + .slider { background-color: #22c55e; }
     input:checked + .slider:before { transform: translateX(22px); }
 
-    /* Capital & Metrics Bar */
+    /* Capital Bar */
     .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 6px; }
     .stats-grid-top { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
     
@@ -33,7 +33,7 @@
     .stat-card-top label { font-size: 0.58rem; color: #64748b; display: block; }
     .stat-card-top span { font-size: 0.82rem; font-weight: bold; }
 
-    /* Navigation Tabs Working Fix */
+    /* Navigation Tabs */
     .nav-tabs { display: flex; gap: 6px; margin-bottom: 10px; overflow-x: auto; padding-bottom: 4px; border-bottom: 1px solid #1e293b; }
     .tab-btn { background: #1e293b; border: 1px solid #334155; color: #94a3b8; padding: 8px 12px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.2s; }
     .tab-btn:hover { background: #334155; color: #fff; }
@@ -140,8 +140,7 @@
         </div>
         <div>
           <label style="font-size:0.68rem; color:#64748b;">SELECT SYMBOL</label>
-          <select id="symbol-select" onchange="loadTradingViewChart()">
-          </select>
+          <select id="symbol-select" onchange="loadTradingViewChart()"></select>
         </div>
       </div>
       
@@ -171,10 +170,6 @@
         <div class="scanner-row">
           <span style="color:#94a3b8;">RSI (14) Momentum Value:</span>
           <span id="scan-rsi" style="color:#eab308;">42.5 (Neutral)</span>
-        </div>
-        <div class="scanner-row">
-          <span style="color:#94a3b8;">ATR Volatility Confirmation:</span>
-          <span id="scan-atr" style="color:#22c55e;">PASSED</span>
         </div>
       </div>
 
@@ -246,48 +241,27 @@
   </div>
 
   <script>
-    // Asset Lists across all categories
     const assets = {
       crypto: [
         { name: "BTC/USDT (Bitcoin)", symbol: "BINANCE:BTCUSDT" },
         { name: "ETH/USDT (Ethereum)", symbol: "BINANCE:ETHUSDT" },
         { name: "SOL/USDT (Solana)", symbol: "BINANCE:SOLUSDT" },
         { name: "BNB/USDT (Binance Coin)", symbol: "BINANCE:BNBUSDT" },
-        { name: "XRP/USDT (Ripple)", symbol: "BINANCE:XRPUSDT" },
-        { name: "ADA/USDT (Cardano)", symbol: "BINANCE:ADAUSDT" },
-        { name: "DOGE/USDT (Dogecoin)", symbol: "BINANCE:DOGEUSDT" },
-        { name: "AVAX/USDT (Avalanche)", symbol: "BINANCE:AVAXUSDT" },
-        { name: "DOT/USDT (Polkadot)", symbol: "BINANCE:DOTUSDT" },
-        { name: "LINK/USDT (Chainlink)", symbol: "BINANCE:LINKUSDT" },
-        { name: "MATIC/USDT (Polygon)", symbol: "BINANCE:MATICUSDT" },
-        { name: "SHIB/USDT (Shiba)", symbol: "BINANCE:SHIBUSDT" },
-        { name: "LTC/USDT (Litecoin)", symbol: "BINANCE:LTCUSDT" },
-        { name: "PEPE/USDT (Pepe)", symbol: "BINANCE:PEPEUSDT" },
-        { name: "NEAR/USDT (Near Protocol)", symbol: "BINANCE:NEARUSDT" },
-        { name: "SUI/USDT (Sui)", symbol: "BINANCE:SUIUSDT" }
+        { name: "XRP/USDT (Ripple)", symbol: "BINANCE:XRPUSDT" }
       ],
       forex: [
         { name: "EUR/USD (Euro / Dollar)", symbol: "FX:EURUSD" },
         { name: "GBP/USD (Pound / Dollar)", symbol: "FX:GBPUSD" },
-        { name: "USD/JPY (Dollar / Yen)", symbol: "FX:USDJPY" },
-        { name: "AUD/USD (Aussie / Dollar)", symbol: "FX:AUDUSD" },
-        { name: "USD/CAD (Dollar / CAD)", symbol: "FX:USDCAD" },
-        { name: "USD/CHF (Dollar / Franc)", symbol: "FX:USDCHF" }
+        { name: "USD/JPY (Dollar / Yen)", symbol: "FX:USDJPY" }
       ],
       metals: [
         { name: "XAU/USD (Gold Spot)", symbol: "OANDA:XAUUSD" },
-        { name: "XAG/USD (Silver Spot)", symbol: "OANDA:XAGUSD" },
-        { name: "USOIL (Crude Oil)", symbol: "TVC:USOIL" },
-        { name: "UKOIL (Brent Oil)", symbol: "TVC:UKOIL" }
+        { name: "USOIL (Crude Oil)", symbol: "TVC:USOIL" }
       ],
       stocks: [
         { name: "NVDA (NVIDIA)", symbol: "NASDAQ:NVDA" },
         { name: "AAPL (Apple)", symbol: "NASDAQ:AAPL" },
-        { name: "TSLA (Tesla)", symbol: "NASDAQ:TSLA" },
-        { name: "MSFT (Microsoft)", symbol: "NASDAQ:MSFT" },
-        { name: "AMZN (Amazon)", symbol: "NASDAQ:AMZN" },
-        { name: "SPX500 (S&P 500)", symbol: "FOREXCOM:SPXUSD" },
-        { name: "NAS100 (Nasdaq 100)", symbol: "FOREXCOM:NSXUSD" }
+        { name: "TSLA (Tesla)", symbol: "NASDAQ:TSLA" }
       ]
     };
 
@@ -299,18 +273,16 @@
     let tradeHistory = [];
     const MAX_OPEN_TRADES = 2;
 
-    // Direct Tab Switch Fix Function
+    // Working Tab Switching Logic
     function switchTab(tabId, btnElem) {
-      const allTabs = document.getElementsByClassName('tab-content');
-      for (let i = 0; i < allTabs.length; i++) {
-        allTabs[i].classList.remove('active');
-        allTabs[i].style.display = 'none';
-      }
+      const allTabs = document.querySelectorAll('.tab-content');
+      allTabs.forEach(t => {
+        t.classList.remove('active');
+        t.style.display = 'none';
+      });
 
-      const allButtons = document.getElementsByClassName('tab-btn');
-      for (let i = 0; i < allButtons.length; i++) {
-        allButtons[i].classList.remove('active');
-      }
+      const allBtns = document.querySelectorAll('.tab-btn');
+      allBtns.forEach(b => b.classList.remove('active'));
 
       const activeTab = document.getElementById(tabId);
       if(activeTab) {
@@ -353,7 +325,6 @@
           symbolSelect.appendChild(opt);
         });
       }
-
       loadTradingViewChart();
     }
 
@@ -403,7 +374,6 @@
         const rsiVal = (Math.random() * 60) + 20;
         const priceVsEMA200 = Math.random() > 0.45 ? 'ABOVE' : 'BELOW';
 
-        // Update Live Bot Tracker Tab
         document.getElementById('scan-symbol').innerText = selectedAsset.name;
         document.getElementById('scan-ema').innerText = priceVsEMA200 === 'ABOVE' ? "UPTREND (Price Above 200 EMA)" : "DOWNTREND (Price Below 200 EMA)";
         document.getElementById('scan-ema').style.color = priceVsEMA200 === 'ABOVE' ? "#22c55e" : "#ef4444";
@@ -416,11 +386,9 @@
 
         if(priceVsEMA200 === 'ABOVE' && rsiVal < 35) {
           triggerTrade(selectedAsset.name, 'BUY', `200 EMA Uptrend + RSI Oversold (${rsiVal.toFixed(1)})`);
-        } 
-        else if(priceVsEMA200 === 'BELOW' && rsiVal > 65) {
+        } else if(priceVsEMA200 === 'BELOW' && rsiVal > 65) {
           triggerTrade(selectedAsset.name, 'SELL', `200 EMA Downtrend + RSI Overbought (${rsiVal.toFixed(1)})`);
-        } 
-        else {
+        } else {
           document.getElementById('ai-reasoning').innerText = `[SCANNING]: ${selectedAsset.name} | Waiting for technical indicators confluence...`;
         }
       }, 3500);
@@ -451,4 +419,131 @@
         return;
       }
 
-      const selectElem = document.getElementById('symbol-se
+      const selectElem = document.getElementById('symbol-select');
+      const assetName = selectElem.options[selectElem.selectedIndex] ? selectElem.options[selectElem.selectedIndex].text : "BTC/USDT (Bitcoin)";
+      triggerTrade(assetName, type, "Manual Order Execution");
+    }
+
+    function closeTrade(id, reason = "Manual Close") {
+      const index = activePositions.findIndex(t => t.id === id);
+      if(index !== -1) {
+        const trade = activePositions[index];
+        totalCapital += trade.pnl;
+        document.getElementById('input-total-capital').value = totalCapital.toFixed(2);
+
+        tradeHistory.unshift({
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+          asset: trade.asset,
+          type: trade.type,
+          lots: trade.lots,
+          reason: reason,
+          pnl: trade.pnl
+        });
+
+        activePositions.splice(index, 1);
+        renderPositions();
+        renderHistory();
+        updateMetricsUI();
+        updateAnalytics();
+
+        document.getElementById('ai-reasoning').innerText = `[TRADE CLOSED]: ${reason} | Realized P&L: ${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toFixed(2)}`;
+      }
+    }
+
+    function startPNLSimulation() {
+      pnlInterval = setInterval(() => {
+        for (let i = activePositions.length - 1; i >= 0; i--) {
+          let trade = activePositions[i];
+          const step = (Math.random() - 0.44) * 8; 
+          trade.pnl += step;
+
+          if(trade.pnl >= trade.tp) {
+            trade.pnl = trade.tp;
+            closeTrade(trade.id, "Take-Profit Hit (TP)");
+            continue;
+          }
+
+          if(trade.pnl <= trade.sl) {
+            trade.pnl = trade.sl;
+            closeTrade(trade.id, "Stop-Loss Hit (SL)");
+            continue;
+          }
+        }
+        renderPositions();
+        updateMetricsUI();
+      }, 1200);
+    }
+
+    function updateMetricsUI() {
+      const metrics = getKotegawaMetrics();
+      document.getElementById('display-active-cap').innerText = `$${metrics.activeCapital.toFixed(2)}`;
+      document.getElementById('display-backup-cap').innerText = `$${metrics.backupCapital.toFixed(2)}`;
+      document.getElementById('display-risk-limit').innerText = `$${metrics.maxRiskPerTrade.toFixed(2)}`;
+      
+      const calculatedLot = (metrics.maxRiskPerTrade / 1000).toFixed(2);
+      document.getElementById('calculated-lot-display').value = `${Math.max(0.01, calculatedLot)} Lots`;
+    }
+
+    function updateAnalytics() {
+      const total = tradeHistory.length;
+      const wins = tradeHistory.filter(t => t.pnl > 0).length;
+      const losses = tradeHistory.filter(t => t.pnl <= 0).length;
+      const ratio = total > 0 ? ((wins / total) * 100).toFixed(1) : 0.0;
+
+      document.getElementById('top-total-trades').innerText = total;
+      document.getElementById('top-win-trades').innerText = wins;
+      document.getElementById('top-loss-trades').innerText = losses;
+      document.getElementById('top-win-ratio').innerText = `${ratio}%`;
+    }
+
+    function renderPositions() {
+      const tbody = document.getElementById('active-trades-body');
+      tbody.innerHTML = '';
+      if (activePositions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #64748b;">No active trades running.</td></tr>';
+        return;
+      }
+      activePositions.forEach(pos => {
+        let pnlColor = pos.pnl >= 0 ? '#22c55e' : '#ef4444';
+        let row = `<tr>
+          <td>${pos.asset}</td>
+          <td style="color:${pos.type==='BUY'?'#22c55e':'#ef4444'}; font-weight:bold;">${pos.type}</td>
+          <td>${pos.lots}</td>
+          <td style="color:#ef4444; font-weight:bold;">-$${Math.abs(pos.sl).toFixed(2)}</td>
+          <td style="color:#22c55e; font-weight:bold;">+$${pos.tp.toFixed(2)}</td>
+          <td style="color:${pnlColor}; font-weight:bold;">${pos.pnl >= 0 ? '+' : ''}$${pos.pnl.toFixed(2)}</td>
+          <td><button class="btn-close" onclick="closeTrade(${pos.id})">Close</button></td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+    }
+
+    function renderHistory() {
+      const tbody = document.getElementById('trade-history-body');
+      tbody.innerHTML = '';
+      if (tradeHistory.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #64748b;">No history records found.</td></tr>';
+        return;
+      }
+      tradeHistory.forEach(h => {
+        let pnlColor = h.pnl >= 0 ? '#22c55e' : '#ef4444';
+        let row = `<tr>
+          <td style="color:#64748b;">${h.time}</td>
+          <td>${h.asset}</td>
+          <td style="color:${h.type==='BUY'?'#22c55e':'#ef4444'}; font-weight:bold;">${h.type}</td>
+          <td>${h.lots}</td>
+          <td><span style="font-size:0.7rem; padding:2px 6px; border-radius:4px; background:#1e293b; color:${pnlColor};">${h.reason}</span></td>
+          <td style="color:${pnlColor}; font-weight:bold;">${h.pnl >= 0 ? '+' : ''}$${h.pnl.toFixed(2)}</td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      updateAssetDropdown();
+      updateMetricsUI();
+      startPNLSimulation();
+    });
+  </script>
+</body>
+</html>
