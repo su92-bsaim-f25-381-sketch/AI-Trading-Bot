@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Trading Bot & Analysis Dashboard</title>
+  <title>AI Algorithmic Trading Dashboard</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
     body { background-color: #0b0e14; color: #e1e7ef; padding: 12px; }
@@ -21,7 +21,8 @@
     .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 6px; font-size: 0.95rem; }
     .btn-buy { background: #22c55e; color: #000; }
     .btn-sell { background: #ef4444; color: #fff; }
-    .stats-row { display: flex; justify-content: space-between; font-size: 0.85rem; color: #94a3b8; margin-top: 4px; }
+    .stats-row { display: flex; justify-content: space-between; font-size: 0.85rem; color: #94a3b8; margin-top: 6px; }
+    select { width: 100%; padding: 8px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 6px; margin-bottom: 10px; font-size: 0.95rem; }
   </style>
 </head>
 <body>
@@ -31,30 +32,37 @@
     <span class="status-badge" id="bot-status">BOT ACTIVE</span>
   </div>
 
-  <!-- Live Market Price & Chart -->
+  <!-- Pair Selector & Live Chart -->
   <div class="card">
-    <h2>BTC/USDT Live Market</h2>
+    <h2>Select Crypto Asset</h2>
+    <select id="pair-select" onchange="changePair()">
+      <option value="BTCUSDT" selected>BTC/USDT (Bitcoin)</option>
+      <option value="ETHUSDT">ETH/USDT (Ethereum)</option>
+      <option value="SOLUSDT">SOL/USDT (Solana)</option>
+      <option value="BNBUSDT">BNB/USDT (Binance Coin)</option>
+    </select>
+    
     <div class="price-display" id="live-price">Loading Price...</div>
-    <div class="chart-container" id="tradingview_chart"></div>
+    <div class="chart-container" id="chart_holder"></div>
   </div>
 
-  <!-- Real-Time AI Analysis -->
+  <!-- Real-Time AI Analysis Engine -->
   <div class="card">
-    <h2>AI Technical Analysis Engine</h2>
+    <h2>AI Technical Indicators</h2>
     <div class="signal-box">
       <span>AI Decision:</span>
       <span id="ai-decision" class="signal-neutral">ANALYZING...</span>
     </div>
     <div class="stats-row">
-      <span>Calculated RSI (14):</span>
+      <span>RSI (14):</span>
       <strong id="rsi-val">--</strong>
     </div>
     <div class="stats-row">
-      <span>Suggested Stop Loss:</span>
+      <span>Stop Loss Target:</span>
       <strong id="sl-val" style="color: #ef4444;">--</strong>
     </div>
     <div class="stats-row">
-      <span>Suggested Take Profit:</span>
+      <span>Take Profit Target:</span>
       <strong id="tp-val" style="color: #22c55e;">--</strong>
     </div>
   </div>
@@ -66,45 +74,46 @@
       <span>Virtual Wallet Balance:</span>
       <strong id="wallet-balance" style="color: #38bdf8;">$10,000.00</strong>
     </div>
-    <button class="btn btn-buy" onclick="executeTrade('BUY')">Auto Execute BUY Signal</button>
-    <button class="btn btn-sell" onclick="executeTrade('SELL')">Auto Execute SELL Signal</button>
+    <button class="btn btn-buy" onclick="executeTrade('BUY')">Execute Paper BUY</button>
+    <button class="btn btn-sell" onclick="executeTrade('SELL')">Execute Paper SELL</button>
   </div>
 
-  <!-- TradingView Widget Script -->
+  <!-- TradingView Script -->
   <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
   <script type="text/javascript">
-    new TradingView.widget({
-      "autosize": true,
-      "symbol": "BINANCE:BTCUSDT",
-      "interval": "15",
-      "timezone": "Etc/UTC",
-      "theme": "dark",
-      "style": "1",
-      "locale": "en",
-      "enable_publishing": false,
-      "allow_symbol_change": true,
-      "container_id": "tradingview_chart"
-    });
-
-    // Fetch Live Price & Simulating AI Logic
+    let currentPair = "BTCUSDT";
     let currentPrice = 0;
-    let balance = 10000;
+    let tvWidget = null;
 
-    async function fetchLiveTicker() {
+    function loadChart(symbol) {
+      document.getElementById('chart_holder').innerHTML = '<div id="tradingview_chart" style="height:100%;"></div>';
+      tvWidget = new TradingView.widget({
+        "autosize": true,
+        "symbol": "BINANCE:" + symbol,
+        "interval": "15",
+        "timezone": "Etc/UTC",
+        "theme": "dark",
+        "style": "1",
+        "locale": "en",
+        "enable_publishing": false,
+        "allow_symbol_change": true,
+        "container_id": "tradingview_chart"
+      });
+    }
+
+    async function fetchLivePrice() {
       try {
-        const response = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
+        const response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${currentPair}`);
         const data = await response.json();
         currentPrice = parseFloat(data.price);
         document.getElementById('live-price').innerText = '$' + currentPrice.toLocaleString(undefined, {minimumFractionDigits: 2});
         runAiAnalysis(currentPrice);
       } catch (err) {
-        document.getElementById('live-price').innerText = '$96,500.00 (Simulated)';
-        runAiAnalysis(96500);
+        document.getElementById('live-price').innerText = 'Fetch Error';
       }
     }
 
     function runAiAnalysis(price) {
-      // Auto Calculation Logic (Mock RSI & Auto Risk Management)
       const mockRsi = (Math.random() * (75 - 25) + 25).toFixed(1);
       document.getElementById('rsi-val').innerText = mockRsi;
 
@@ -124,12 +133,20 @@
       document.getElementById('tp-val').innerText = '$' + (price * 1.03).toFixed(2);
     }
 
-    function executeTrade(type) {
-      alert(type + ' Order Executed at $' + currentPrice.toFixed(2) + ' via AI Bot!');
+    function changePair() {
+      currentPair = document.getElementById('pair-select').value;
+      loadChart(currentPair);
+      fetchLivePrice();
     }
 
-    fetchLiveTicker();
-    setInterval(fetchLiveTicker, 5000); // Auto updates every 5 seconds
+    function executeTrade(type) {
+      alert(`${type} Order Placed for ${currentPair} at $${currentPrice.toFixed(2)}`);
+    }
+
+    // Initial Load
+    loadChart(currentPair);
+    fetchLivePrice();
+    setInterval(fetchLivePrice, 5000);
   </script>
 </body>
 </html>
