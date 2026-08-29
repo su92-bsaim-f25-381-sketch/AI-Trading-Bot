@@ -24,8 +24,6 @@
     .btn-group { display: flex; justify-content: space-between; margin-top: 8px; }
     .stats-row { display: flex; justify-content: space-between; font-size: 0.85rem; color: #94a3b8; margin-top: 6px; }
     select { width: 100%; padding: 8px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 6px; margin-bottom: 10px; font-size: 0.95rem; }
-    
-    /* Trade History Table Styles */
     table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.8rem; }
     th, td { text-align: left; padding: 6px; border-bottom: 1px solid #1e293b; }
     th { color: #64748b; font-weight: 600; }
@@ -40,7 +38,6 @@
     <span class="status-badge" id="bot-status">BOT ACTIVE</span>
   </div>
 
-  <!-- Pair Selector & Live Chart -->
   <div class="card">
     <h2>Select Crypto Asset</h2>
     <select id="pair-select" onchange="changePair()">
@@ -49,21 +46,23 @@
       <option value="SOLUSDT">SOL/USDT (Solana)</option>
       <option value="BNBUSDT">BNB/USDT (Binance Coin)</option>
     </select>
-    
     <div class="price-display" id="live-price">Loading Price...</div>
     <div class="chart-container" id="chart_holder"></div>
   </div>
 
-  <!-- Real-Time AI Analysis Engine -->
   <div class="card">
-    <h2>AI Technical Indicators</h2>
+    <h2>AI Technical Indicators Engine</h2>
     <div class="signal-box">
       <span>AI Decision:</span>
-      <span id="ai-decision" class="signal-neutral">ANALYZING...</span>
+      <span id="ai-decision" class="signal-neutral">COMPUTING...</span>
     </div>
     <div class="stats-row">
-      <span>RSI (14):</span>
-      <strong id="rsi-val">--</strong>
+      <span>Real RSI (14):</span>
+      <strong id="rsi-val">Calculating...</strong>
+    </div>
+    <div class="stats-row">
+      <span>EMA (20):</span>
+      <strong id="ema-val">Calculating...</strong>
     </div>
     <div class="stats-row">
       <span>Stop Loss Target:</span>
@@ -75,7 +74,6 @@
     </div>
   </div>
 
-  <!-- Paper Trading Controls -->
   <div class="card">
     <h2>Paper Trading Execution</h2>
     <div class="stats-row">
@@ -88,7 +86,6 @@
     </div>
   </div>
 
-  <!-- Trade History & PnL Ledger -->
   <div class="card">
     <h2>Trade History Log</h2>
     <table id="trade-table">
@@ -108,12 +105,10 @@
     </table>
   </div>
 
-  <!-- TradingView Script -->
   <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
   <script type="text/javascript">
     let currentPair = "BTCUSDT";
     let currentPrice = 0;
-    let balance = 10000;
     let trades = [];
 
     function loadChart(symbol) {
@@ -132,27 +127,57 @@
       });
     }
 
-    async function fetchLivePrice() {
+    async function fetchKlinesAndAnalyze() {
       try {
-        const response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${currentPair}`);
+        const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${currentPair}&interval=15m&limit=50`);
         const data = await response.json();
-        currentPrice = parseFloat(data.price);
+        const closePrices = data.map(candle => parseFloat(candle[4]));
+        currentPrice = closePrices[closePrices.length - 1];
+
         document.getElementById('live-price').innerText = '$' + currentPrice.toLocaleString(undefined, {minimumFractionDigits: 2});
-        runAiAnalysis(currentPrice);
+
+        const rsi = calculateRSI(closePrices, 14);
+        const ema = calculateEMA(closePrices, 20);
+
+        document.getElementById('rsi-val').innerText = rsi.toFixed(2);
+        document.getElementById('ema-val').innerText = '$' + ema.toFixed(2);
+
+        evaluateAiSignal(rsi, currentPrice, ema);
       } catch (err) {
-        document.getElementById('live-price').innerText = 'Fetch Error';
+        document.getElementById('live-price').innerText = 'Data Fetch Error';
       }
     }
 
-    function runAiAnalysis(price) {
-      const mockRsi = (Math.random() * (75 - 25) + 25).toFixed(1);
-      document.getElementById('rsi-val').innerText = mockRsi;
+    function calculateRSI(prices, period = 14) {
+      let gains = 0, losses = 0;
+      for (let i = prices.length - period; i < prices.length; i++) {
+        const diff = prices[i] - prices[i - 1];
+        if (diff >= 0) gains += diff;
+        else losses -= diff;
+      }
+      let avgGain = gains / period;
+      let avgLoss = losses / period;
+      if (avgLoss === 0) return 100;
+      let rs = avgGain / avgLoss;
+      return 100 - (100 / (1 + rs));
+    }
 
+    function calculateEMA(prices, period = 20) {
+      const k = 2 / (period + 1);
+      let ema = prices[0];
+      for (let i = 1; i < prices.length; i++) {
+        ema = (prices[i] * k) + (ema * (1 - k));
+      }
+      return ema;
+    }
+
+    function evaluateAiSignal(rsi, price, ema) {
       const decisionElem = document.getElementById('ai-decision');
-      if (mockRsi < 35) {
+      
+      if (rsi < 40 && price > ema) {
         decisionElem.innerText = "STRONG BUY";
         decisionElem.className = "signal-buy";
-      } else if (mockRsi > 65) {
+      } else if (rsi > 60 && price < ema) {
         decisionElem.innerText = "STRONG SELL";
         decisionElem.className = "signal-sell";
       } else {
@@ -167,23 +192,19 @@
     function changePair() {
       currentPair = document.getElementById('pair-select').value;
       loadChart(currentPair);
-      fetchLivePrice();
+      fetchKlinesAndAnalyze();
     }
 
     function executeTrade(type) {
       if (currentPrice === 0) return alert("Price loading... Please wait.");
-
       const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      const newTrade = { time, pair: currentPair, type, price: currentPrice };
-
-      trades.unshift(newTrade);
+      trades.unshift({ time, pair: currentPair, type, price: currentPrice });
       renderTradeHistory();
     }
 
     function renderTradeHistory() {
       const tbody = document.getElementById('trade-history-body');
       tbody.innerHTML = '';
-
       trades.forEach(t => {
         const row = document.createElement('tr');
         const typeClass = t.type === 'BUY' ? 'text-buy' : 'text-sell';
@@ -197,10 +218,9 @@
       });
     }
 
-    // Initial Load
     loadChart(currentPair);
-    fetchLivePrice();
-    setInterval(fetchLivePrice, 5000);
+    fetchKlinesAndAnalyze();
+    setInterval(fetchKlinesAndAnalyze, 5000);
   </script>
 </body>
 </html>
