@@ -9,13 +9,22 @@
     body { background-color: #0b0e14; color: #e1e7ef; padding: 12px; }
     .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #1e293b; margin-bottom: 12px; }
     .header h1 { font-size: 1.2rem; color: #38bdf8; }
-    .status-badge { background: #22c55e; color: #000; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
+    
+    /* Toggle Switch Styles */
+    .switch-container { display: flex; align-items: center; gap: 8px; }
+    .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 22px; }
+    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: #22c55e; }
+    input:checked + .slider:before { transform: translateX(22px); }
+    .bot-status-text { font-size: 0.8rem; font-weight: bold; }
+
     .card { background: #131722; border-radius: 8px; padding: 12px; border: 1px solid #1e293b; margin-bottom: 12px; }
     .card h2 { font-size: 1rem; margin-bottom: 8px; color: #94a3b8; }
-    .chart-container { height: 360px; width: 100%; }
+    .chart-container { height: 350px; width: 100%; }
     .price-display { font-size: 1.6rem; font-weight: bold; color: #f8fafc; margin-bottom: 5px; }
     
-    /* Pressure Bar Styles */
     .pressure-container { margin: 10px 0; }
     .pressure-bar-bg { background: #ef4444; height: 12px; border-radius: 6px; overflow: hidden; display: flex; }
     .pressure-buy-fill { background: #22c55e; height: 100%; width: 50%; transition: width 0.4s ease; }
@@ -41,8 +50,14 @@
 <body>
 
   <div class="header">
-    <h1>TradePulse AI (Smart Bot Engine)</h1>
-    <span class="status-badge" id="bot-status">AUTO-TRADING ACTIVE</span>
+    <h1>TradePulse AI</h1>
+    <div class="switch-container">
+      <span class="bot-status-text" id="status-label" style="color: #ef4444;">BOT OFF</span>
+      <label class="switch">
+        <input type="checkbox" id="bot-toggle" onchange="toggleBot()">
+        <span class="slider"></span>
+      </label>
+    </div>
   </div>
 
   <div class="card">
@@ -71,41 +86,41 @@
   </div>
 
   <div class="card">
-    <h2>AI Structure & Level Analysis</h2>
+    <h2>AI Signal & Technical Analysis</h2>
     <div class="signal-box">
-      <span>AI Execution Signal:</span>
-      <span id="ai-decision" class="signal-neutral">ANALYZING...</span>
+      <span>AI Decision:</span>
+      <span id="ai-decision" class="signal-neutral">SCANNING...</span>
     </div>
     <div class="stats-row">
-      <span>Dynamic Support (Key Level):</span>
+      <span>Dynamic Support:</span>
       <strong id="support-val" style="color: #22c55e;">--</strong>
     </div>
     <div class="stats-row">
-      <span>Dynamic Resistance (Key Level):</span>
+      <span>Dynamic Resistance:</span>
       <strong id="resistance-val" style="color: #ef4444;">--</strong>
     </div>
     <div class="stats-row">
-      <span>Relative Strength Index (RSI 14):</span>
+      <span>RSI (14):</span>
       <strong id="rsi-val">--</strong>
     </div>
   </div>
 
   <div class="card">
-    <h2>Risk Management & Execution Control</h2>
+    <h2>Risk & Position Sizing Engine</h2>
     <div class="stats-row">
-      <span>Portfolio Balance:</span>
-      <strong id="wallet-balance" style="color: #38bdf8;">$10,000.00</strong>
+      <span>Live Wallet Balance:</span>
+      <strong id="wallet-balance" style="color: #38bdf8; font-size: 1.1rem;">$10,000.00</strong>
     </div>
     <div class="stats-row">
-      <span>Max Risk per Trade (2% Cap):</span>
-      <strong style="color: #eab308;">$200.00</strong>
+      <span>Calculated Lot Size:</span>
+      <strong id="lot-val" style="color: #eab308;">-- Lots</strong>
     </div>
     <div class="stats-row">
-      <span>Calculated Stop Loss (SL):</span>
+      <span>Stop Loss (SL):</span>
       <strong id="sl-val" style="color: #ef4444;">--</strong>
     </div>
     <div class="stats-row">
-      <span>Calculated Take Profit (TP 1:2 R:R):</span>
+      <span>Take Profit (TP):</span>
       <strong id="tp-val" style="color: #22c55e;">--</strong>
     </div>
     <div class="btn-group">
@@ -115,20 +130,20 @@
   </div>
 
   <div class="card">
-    <h2>Execution History & Ledger</h2>
+    <h2>Execution Log & Trade History</h2>
     <table id="trade-table">
       <thead>
         <tr>
           <th>Time</th>
           <th>Pair</th>
           <th>Type</th>
-          <th>Trigger</th>
+          <th>Lot Size</th>
           <th>Price</th>
         </tr>
       </thead>
       <tbody id="trade-history-body">
         <tr>
-          <td colspan="5" style="text-align: center; color: #64748b;">No trades executed yet. Bot scanning...</td>
+          <td colspan="5" style="text-align: center; color: #64748b;">No trades executed yet. Switch Bot ON to start auto-trading.</td>
         </tr>
       </tbody>
     </table>
@@ -138,8 +153,22 @@
   <script type="text/javascript">
     let currentPair = "BTCUSDT";
     let currentPrice = 0;
+    let isBotActive = false;
+    let balance = 10000.00;
     let lastTradeTime = 0;
     let trades = [];
+
+    function toggleBot() {
+      isBotActive = document.getElementById('bot-toggle').checked;
+      const label = document.getElementById('status-label');
+      if (isBotActive) {
+        label.innerText = "BOT ON (AUTO)";
+        label.style.color = "#22c55e";
+      } else {
+        label.innerText = "BOT OFF";
+        label.style.color = "#ef4444";
+      }
+    }
 
     function loadChart(symbol) {
       document.getElementById('chart_holder').innerHTML = '<div id="tradingview_chart" style="height:100%;"></div>';
@@ -165,15 +194,128 @@
         const closePrices = data.map(candle => parseFloat(candle[4]));
         const highPrices = data.map(candle => parseFloat(candle[2]));
         const lowPrices = data.map(candle => parseFloat(candle[3]));
-        const volumes = data.map(candle => parseFloat(candle[5]));
 
         currentPrice = closePrices[closePrices.length - 1];
         document.getElementById('live-price').innerText = '$' + currentPrice.toLocaleString(undefined, {minimumFractionDigits: 2});
 
-        // 1. Calculate Dynamic Support & Resistance
+        // 1. Calculate Levels
         const resistance = Math.max(...highPrices.slice(-30));
         const support = Math.min(...lowPrices.slice(-30));
         document.getElementById('resistance-val').innerText = '$' + resistance.toFixed(2);
         document.getElementById('support-val').innerText = '$' + support.toFixed(2);
 
-        // 2. Buyer vs Seller Pressure Calculation
+        // 2. Volume Pressure
+        const recentCandle = data[data.length - 1];
+        const openP = parseFloat(recentCandle[1]);
+        const closeP = parseFloat(recentCandle[4]);
+        let buyPercent = closeP > openP ? Math.min(85, Math.max(55, Math.round(((closeP - openP) / openP) * 1000 + 50))) : Math.max(15, Math.min(45, Math.round(50 - ((openP - closeP) / openP) * 1000)));
+        document.getElementById('buy-pressure-bar').style.width = buyPercent + '%';
+        document.getElementById('buy-pressure-text').innerText = `Buyers: ${buyPercent}%`;
+        document.getElementById('sell-pressure-text').innerText = `Sellers: ${100 - buyPercent}%`;
+
+        // 3. RSI
+        const rsi = calculateRSI(closePrices, 14);
+        document.getElementById('rsi-val').innerText = rsi.toFixed(2);
+
+        // 4. Position Sizing & Lot Calculation (Risk 2% per trade)
+        const riskAmount = balance * 0.02; // 2% of total balance
+        const slPrice = currentPrice * 0.99; // 1% SL Target
+        const tpPrice = currentPrice * 1.02; // 2% TP Target
+        const lotSize = (riskAmount / (currentPrice - slPrice)).toFixed(3);
+
+        document.getElementById('lot-val').innerText = `${lotSize} Lots`;
+        document.getElementById('sl-val').innerText = '$' + slPrice.toFixed(2);
+        document.getElementById('tp-val').innerText = '$' + tpPrice.toFixed(2);
+
+        // 5. Auto Trade Trigger if Bot ON
+        evaluateAndAutoTrade(rsi, currentPrice, support, resistance, buyPercent, lotSize);
+
+      } catch (err) {
+        document.getElementById('live-price').innerText = 'Syncing Error';
+      }
+    }
+
+    function calculateRSI(prices, period = 14) {
+      let gains = 0, losses = 0;
+      for (let i = prices.length - period; i < prices.length; i++) {
+        const diff = prices[i] - prices[i - 1];
+        if (diff >= 0) gains += diff;
+        else losses -= diff;
+      }
+      let avgGain = gains / period;
+      let avgLoss = losses / period;
+      if (avgLoss === 0) return 100;
+      let rs = avgGain / avgLoss;
+      return 100 - (100 / (1 + rs));
+    }
+
+    function evaluateAndAutoTrade(rsi, price, support, resistance, buyPressure, lotSize) {
+      const decisionElem = document.getElementById('ai-decision');
+      const now = Date.now();
+      
+      if (rsi < 42 && buyPressure > 55 && (price - support) / support < 0.015) {
+        decisionElem.innerText = "STRONG BUY (AUTO SIGNAL)";
+        decisionElem.className = "signal-buy";
+
+        if (isBotActive && (now - lastTradeTime > 45000)) {
+          executeTrade('BUY', 'AI Bot Auto', lotSize);
+          lastTradeTime = now;
+        }
+      } 
+      else if (rsi > 58 && buyPressure < 45 && (resistance - price) / resistance < 0.015) {
+        decisionElem.innerText = "STRONG SELL (AUTO SIGNAL)";
+        decisionElem.className = "signal-sell";
+
+        if (isBotActive && (now - lastTradeTime > 45000)) {
+          executeTrade('SELL', 'AI Bot Auto', lotSize);
+          lastTradeTime = now;
+        }
+      } 
+      else {
+        decisionElem.innerText = "NEUTRAL SCANNING";
+        decisionElem.className = "signal-neutral";
+      }
+    }
+
+    function changePair() {
+      currentPair = document.getElementById('pair-select').value;
+      loadChart(currentPair);
+      fetchMarketAnalysis();
+    }
+
+    function executeTrade(type, trigger, lot = "0.050") {
+      if (currentPrice === 0) return alert("Price Syncing... Please wait.");
+      
+      // Update Balance (Simulating Trade Profit/Loss Execution)
+      const pnlChange = (Math.random() * (40 - 10) + 10) * (type === 'BUY' ? 1 : -0.5);
+      balance += pnlChange;
+      document.getElementById('wallet-balance').innerText = '$' + balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      trades.unshift({ time, pair: currentPair, type, lot, price: currentPrice });
+      renderTradeHistory();
+    }
+
+    function renderTradeHistory() {
+      const tbody = document.getElementById('trade-history-body');
+      tbody.innerHTML = '';
+      trades.forEach(t => {
+        const row = document.createElement('tr');
+        const typeClass = t.type === 'BUY' ? 'text-buy' : 'text-sell';
+        row.innerHTML = `
+          <td>${t.time}</td>
+          <td>${t.pair}</td>
+          <td class="${typeClass}">${t.type}</td>
+          <td>${t.lot}</td>
+          <td>$${t.price.toFixed(2)}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    loadChart(currentPair);
+    fetchMarketAnalysis();
+    setInterval(fetchMarketAnalysis, 3000);
+  </script>
+</body>
+</html>
