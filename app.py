@@ -5,15 +5,13 @@ import numpy as np
 import time
 
 app = Flask(__name__)
-CORS(app)  # Cross-Origin Resource Sharing enabled
+CORS(app)
 
-# In-memory Trading Engine State
 wallet_balance = 10000.00
 active_trades = []
 closed_trades = []
 
 def fetch_binance_data(symbol, interval="1m", limit=100):
-    """Fetch real-time candlestick data from Binance API"""
     try:
         url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
         res = requests.get(url, timeout=5)
@@ -35,7 +33,6 @@ def fetch_binance_data(symbol, interval="1m", limit=100):
         return None
 
 def calculate_ema(prices, period):
-    """Calculates Exponential Moving Average (EMA)"""
     prices = np.array(prices)
     alpha = 2 / (period + 1)
     ema = [prices[0]]
@@ -44,7 +41,6 @@ def calculate_ema(prices, period):
     return np.array(ema)
 
 def calculate_rsi(prices, period=14):
-    """Calculates Relative Strength Index (RSI)"""
     deltas = np.diff(prices)
     gains = np.where(deltas > 0, deltas, 0)
     losses = np.where(deltas < 0, -deltas, 0)
@@ -65,43 +61,48 @@ def calculate_rsi(prices, period=14):
     rs = avg_gain / avg_loss
     return 100.0 - (100.0 / (1.0 + rs))
 
+def calculate_macd(closes):
+    ema12 = calculate_ema(closes, 12)
+    ema26 = calculate_ema(closes, 26)
+    macd_line = ema12 - ema26
+    signal_line = calculate_ema(macd_line, 9)
+    return macd_line[-1], signal_line[-1]
+
 def calculate_quant_metrics(data):
-    """Calculates ATR, RSI, EMA 20/50, S/R, and Advanced Signals"""
     closes = np.array(data["closes"])
     highs = np.array(data["highs"])
     lows = np.array(data["lows"])
     current_price = closes[-1]
     
-    # 1. ATR Calculation (14-period)
+    # ATR Calculation
     tr1 = highs[1:] - lows[1:]
     tr2 = np.abs(highs[1:] - closes[:-1])
     tr3 = np.abs(lows[1:] - closes[:-1])
     tr = np.maximum(tr1, np.maximum(tr2, tr3))
     atr = np.mean(tr[-14:]) if len(tr) >= 14 else np.mean(tr)
     
-    # 2. Indicators (EMA 20, EMA 50, RSI 14)
+    # Indicators
     ema20 = calculate_ema(closes, 20)[-1]
     ema50 = calculate_ema(closes, 50)[-1]
     rsi = calculate_rsi(closes, 14)
+    macd_val, macd_sig = calculate_macd(closes)
     
-    # 3. Support & Resistance (Last 20 bars)
-    resistance = np.max(highs[-20:])
     support = np.min(lows[-20:])
+    resistance = np.max(highs[-20:])
     
-    # 4. Multi-Indicator Signal Decision
-    # BUY: Bullish Trend (EMA20 > EMA50) + RSI Momentum (52 to 70)
-    # SELL: Bearish Trend (EMA20 < EMA50) + RSI Momentum (30 to 48)
-    if ema20 > ema50 and rsi > 52 and rsi < 70:
-        signal = "STRONG BUY SETUP"
+    # Advanced Multi-Indicator Strategy Engine
+    # BUY Signal: EMA Trend Up + MACD Golden Cross + Healthy RSI Momentum
+    if (ema20 > ema50) and (macd_val > macd_sig) and (50 < rsi < 68):
+        signal = "HIGH-PROBABILITY BUY SETUP"
         action = "BUY"
-    elif ema20 < ema50 and rsi < 48 and rsi > 30:
-        signal = "STRONG SELL SETUP"
+    # SELL Signal: EMA Trend Down + MACD Bearish Cross + Healthy RSI Drop
+    elif (ema20 < ema50) and (macd_val < macd_sig) and (32 < rsi < 50):
+        signal = "HIGH-PROBABILITY SELL SETUP"
         action = "SELL"
     else:
-        signal = "NEUTRAL / HOLD"
+        signal = "NO CLEAR DIRECTION (WAITING)"
         action = "HOLD"
         
-    # Pressure representation derived from RSI
     buy_pressure = int(rsi)
     sell_pressure = 100 - buy_pressure
         
@@ -111,6 +112,8 @@ def calculate_quant_metrics(data):
         "rsi": round(rsi, 2),
         "ema20": round(ema20, 2),
         "ema50": round(ema50, 2),
+        "macd": round(macd_val, 2),
+        "macd_sig": round(macd_sig, 2),
         "support": round(support, 2),
         "resistance": round(resistance, 2),
         "buy_pressure": buy_pressure,
@@ -121,11 +124,8 @@ def calculate_quant_metrics(data):
         "sl1": round(current_price - (1.0 * atr), 2)
     }
 
-# --- API ENDPOINTS ---
-
 @app.route('/api/market', methods=['GET'])
 def get_market_data():
-    """Returns Live Analysis & Auto-Lot Calculations"""
     symbol = request.args.get('symbol', 'BTCUSDT').upper().replace('/', '')
     if 'BINANCE:' in symbol:
         symbol = symbol.replace('BINANCE:', '')
@@ -134,11 +134,9 @@ def get_market_data():
     
     data = fetch_binance_data(binance_symbol)
     if not data:
-        return jsonify({"error": "Failed to fetch market data"}), 500
+        return jsonify({"error": "Failed to fetch data"}), 500
         
     metrics = calculate_quant_metrics(data)
-    
-    # Risk Engine: 1% Wallet Risk Allocation
     risk_amount = wallet_balance * 0.01
     recommended_lot = round(risk_amount / (metrics["atr"] * 10), 2) if metrics["atr"] > 0 else 0.10
     
@@ -149,8 +147,7 @@ def get_market_data():
 
 @app.route('/api/trade/execute', methods=['POST'])
 def execute_trade():
-    """Executes a BUY or SELL trade (Manual or Auto Bot)"""
-    global wallet_balance, active_trades
+    global active_trades
     req = request.get_json() or {}
     
     symbol = req.get('symbol', 'BTC/USDT')
@@ -160,19 +157,15 @@ def execute_trade():
     atr = float(req.get('atr', 10.0))
 
     if price <= 0:
-        # Fallback price fetch if price was not sent
         clean_sym = symbol.replace('/', '').replace('BINANCE:', '')
         data = fetch_binance_data(clean_sym)
         price = data["current_price"] if data else 50000.0
 
-    trade_id = int(time.time() * 1000)
-    
-    # Automatic SL/TP calculation
-    sl = price - (1.0 * atr) if trade_type == 'BUY' else price + (1.0 * atr)
-    tp = price + (1.5 * atr) if trade_type == 'BUY' else price - (1.5 * atr)
+    sl = price - (1.2 * atr) if trade_type == 'BUY' else price + (1.2 * atr)
+    tp = price + (2.0 * atr) if trade_type == 'BUY' else price - (2.0 * atr)
 
     new_trade = {
-        "id": trade_id,
+        "id": int(time.time() * 1000),
         "symbol": symbol,
         "type": trade_type,
         "lots": lots,
@@ -188,27 +181,23 @@ def execute_trade():
 
 @app.route('/api/trade/close', methods=['POST'])
 def close_trade():
-    """Closes an active trade and updates wallet balance"""
     global wallet_balance, active_trades, closed_trades
     req = request.get_json() or {}
     trade_id = req.get('id')
     exit_price = float(req.get('exit_price', 0.00))
 
     trade_index = next((i for i, t in enumerate(active_trades) if t["id"] == trade_id), None)
-    
     if trade_index is None:
         return jsonify({"status": "ERROR", "message": "Trade not found"}), 404
 
     trade = active_trades.pop(trade_index)
-    
     if exit_price <= 0:
         exit_price = trade["entry_price"]
 
-    # Calculate P&L based on trade direction
     if trade["type"] == "BUY":
-        pnl = (exit_price - trade["entry_price"]) * trade["lots"] * 100
+        pnl = (exit_price - trade["entry_price"]) * trade["lots"] * 10
     else:
-        pnl = (trade["entry_price"] - exit_price) * trade["lots"] * 100
+        pnl = (trade["entry_price"] - exit_price) * trade["lots"] * 10
 
     trade["exit_price"] = round(exit_price, 2)
     trade["pnl"] = round(pnl, 2)
@@ -232,5 +221,4 @@ def get_trade_history():
     return jsonify({"closed_trades": closed_trades, "wallet_balance": round(wallet_balance, 2)})
 
 if __name__ == '__main__':
-    print("🚀 TradePulse AI Backend running on http://localhost:5000")
     app.run(host='0.0.0.0', port=5000, debug=True)
