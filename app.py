@@ -7,13 +7,15 @@ import time
 app = Flask(__name__)
 CORS(app)
 
-wallet_balance = 10000.00
+# Global State Variables
+user_capital = 10000.00
 active_trades = []
 closed_trades = []
 
 def fetch_market_price_and_candles(symbol):
     clean_sym = symbol.replace('BINANCE:', '').replace('OANDA:', '').replace('FX:', '').replace('/', '').upper()
     
+    # 1. Crypto Live Data via Binance
     if 'BTC' in clean_sym or 'ETH' in clean_sym or 'SOL' in clean_sym or 'BNB' in clean_sym:
         try:
             url = f"https://api.binance.com/api/v3/klines?symbol={clean_sym}&interval=1m&limit=100"
@@ -25,6 +27,7 @@ def fetch_market_price_and_candles(symbol):
         except Exception:
             pass
 
+    # 2. Forex / Gold Data via Yahoo Finance API
     try:
         yf_symbol = "GC=F" if "XAU" in clean_sym else f"{clean_sym}=X"
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{yf_symbol}?interval=1m&range=1d"
@@ -83,7 +86,7 @@ def calculate_quant_metrics(data):
     support = np.min(lows[-20:])
     resistance = np.max(highs[-20:])
     
-    # Precision Rules
+    # Precise Crossover Filter Rules
     bullish_crossover = macd_line[-1] > signal_line[-1] and macd_line[-2] <= signal_line[-2]
     bearish_crossover = macd_line[-1] < signal_line[-1] and macd_line[-2] >= signal_line[-2]
     
@@ -109,17 +112,30 @@ def calculate_quant_metrics(data):
         "suggested_action": action
     }
 
+# API to Set Custom Capital
+@app.route('/api/capital', methods=['POST'])
+def set_capital():
+    global user_capital
+    req = request.get_json() or {}
+    amount = float(req.get('capital', 10000.00))
+    if amount > 0:
+        user_capital = amount
+        return jsonify({"status": "SUCCESS", "capital": user_capital, "message": "Capital updated successfully"})
+    return jsonify({"status": "ERROR", "message": "Invalid capital amount"}), 400
+
+# API to Fetch Market Analysis & Auto Risk Lot
 @app.route('/api/market', methods=['GET'])
 def get_market_data():
-    symbol = request.args.get('symbol', 'XAUUSD').upper()
+    symbol = request.args.get('symbol', 'BTCUSDT').upper()
     data = fetch_market_price_and_candles(symbol)
     metrics = calculate_quant_metrics(data)
     
-    risk_amount = wallet_balance * 0.01
-    recommended_lot = round(risk_amount / (metrics["atr"] * 10), 2) if metrics["atr"] > 0 else 0.10
+    # 1% Risk Rule Auto-Lot Calculation
+    risk_amount = user_capital * 0.01
+    recommended_lot = round(risk_amount / (metrics["atr"] * 10), 2) if metrics["atr"] > 0 else 0.01
     
     metrics["auto_lot"] = max(0.01, recommended_lot)
-    metrics["wallet_balance"] = round(wallet_balance, 2)
+    metrics["wallet_balance"] = round(user_capital, 2)
     
     return jsonify(metrics)
 
@@ -127,9 +143,9 @@ def get_market_data():
 def execute_trade():
     global active_trades
     req = request.get_json() or {}
-    symbol = req.get('symbol', 'XAU/USD')
+    symbol = req.get('symbol', 'BTC/USDT')
     trade_type = req.get('type', 'BUY').upper()
-    lots = float(req.get('lots', 0.10))
+    lots = float(req.get('lots', 0.01))
     price = float(req.get('price', 0.00))
     atr = float(req.get('atr', 2.0))
 
@@ -155,36 +171,9 @@ def execute_trade():
     active_trades.insert(0, new_trade)
     return jsonify({"status": "SUCCESS", "message": "Trade Executed", "trade": new_trade})
 
-@app.route('/api/trade/close', methods=['POST'])
-def close_trade():
-    global wallet_balance, active_trades, closed_trades
-    req = request.get_json() or {}
-    trade_id = req.get('id')
-    exit_price = float(req.get('exit_price', 0.00))
-
-    trade_index = next((i for i, t in enumerate(active_trades) if t["id"] == trade_id), None)
-    if trade_index is None:
-        return jsonify({"status": "ERROR", "message": "Trade not found"}), 404
-
-    trade = active_trades.pop(trade_index)
-    pnl = (exit_price - trade["entry_price"]) * trade["lots"] * 10 if trade["type"] == "BUY" else (trade["entry_price"] - exit_price) * trade["lots"] * 10
-
-    trade["exit_price"] = round(exit_price, 2)
-    trade["pnl"] = round(pnl, 2)
-    trade["close_time"] = time.strftime("%H:%M:%S")
-
-    wallet_balance += pnl
-    closed_trades.insert(0, trade)
-
-    return jsonify({"status": "SUCCESS", "closed_trade": trade, "updated_wallet_balance": round(wallet_balance, 2)})
-
 @app.route('/api/trades/active', methods=['GET'])
 def get_active_trades():
-    return jsonify({"active_trades": active_trades, "wallet_balance": round(wallet_balance, 2)})
-
-@app.route('/api/trades/history', methods=['GET'])
-def get_trade_history():
-    return jsonify({"closed_trades": closed_trades, "wallet_balance": round(wallet_balance, 2)})
+    return jsonify({"active_trades": active_trades, "wallet_balance": round(user_capital, 2)})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
