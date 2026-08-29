@@ -46,7 +46,7 @@
     .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
     select, button, input { width: 100%; padding: 10px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 6px; font-size: 0.85rem; font-weight: 600; }
     
-    /* Dedicated Chart Viewport Box */
+    /* Dedicated Viewport Box */
     .chart-box { height: 480px; width: 100%; border-radius: 6px; overflow: hidden; border: 1px solid #1e293b; background: #0f172a; position: relative; }
     
     .signal-box { background: #1e293b; padding: 12px; border-radius: 6px; margin: 8px 0; }
@@ -142,11 +142,17 @@
         </div>
         <div>
           <label style="font-size:0.68rem; color:#64748b;">SYMBOL</label>
-          <select id="symbol-select" onchange="changeTradingViewSymbol()"></select>
+          <select id="symbol-select" onchange="changeTradingViewSymbol()">
+            <!-- Hardcoded Initial Default Fallback Option -->
+            <option value="BINANCE:BTCUSDT">BTC/USDT (Bitcoin)</option>
+          </select>
         </div>
       </div>
-      <!-- Fixed Direct Live TradingView Chart Frame -->
-      <div class="chart-box" id="tradingview_chart_container"></div>
+      
+      <!-- Live TradingView Embed Engine -->
+      <div class="chart-box" id="tradingview_chart_container">
+        <iframe id="tv_iframe" src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&symbol=BINANCE%3ABTCUSDT&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=131722&theme=dark&style=1&timezone=Etc%2FUTC" style="width: 100%; height: 100%; border: none;"></iframe>
+      </div>
     </div>
   </div>
 
@@ -312,15 +318,10 @@
     function changeTradingViewSymbol() {
       const currentSymbol = document.getElementById('symbol-select').value;
       if(currentSymbol) {
-        renderTradingViewChart(currentSymbol);
+        const iframe = document.getElementById('tv_iframe');
+        const formattedSymbol = encodeURIComponent(currentSymbol);
+        iframe.src = `https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&symbol=${formattedSymbol}&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=131722&theme=dark&style=1&timezone=Etc%2FUTC`;
       }
-    }
-
-    // Direct Embed Iframe URL Injection — Works 100% on Mobile & GitHub Pages
-    function renderTradingViewChart(symbol) {
-      const container = document.getElementById('tradingview_chart_container');
-      const formattedSymbol = encodeURIComponent(symbol);
-      container.innerHTML = `<iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&symbol=${formattedSymbol}&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=131722&theme=dark&style=1&timezone=Etc%2FUTC" style="width: 100%; height: 100%; border: none;"></iframe>`;
     }
 
     function toggleBot() {
@@ -460,9 +461,4 @@
       
       const calculatedLot = (metrics.maxRiskPerTrade / 1000).toFixed(2);
       document.getElementById('calculated-lot-display').value = `${Math.max(0.01, calculatedLot)} Lots`;
-    }
-
-    function updateAnalytics() {
-      const total = tradeHistory.length;
-      const wins = tradeHistory.filter(t => t.pnl > 0).length;
-      const losses = tradeHistory.
+ 
