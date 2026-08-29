@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TradePulse AI — Kotegawa Risk Engine</title>
+  <title>TradePulse AI — Institutional Quant Dashboard</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     body { background-color: #0b0e14; color: #e1e7ef; padding: 12px; }
+    
     .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #1e293b; margin-bottom: 12px; }
     .header h1 { font-size: 1.05rem; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
     
@@ -21,10 +22,17 @@
     .card { background: #131722; border-radius: 8px; padding: 12px; border: 1px solid #1e293b; margin-bottom: 12px; }
     .card h2 { font-size: 0.82rem; margin-bottom: 8px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
     
+    /* Metrics Grid */
     .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
     .metric-card { background: #1e293b; padding: 8px; border-radius: 6px; text-align: center; }
     .metric-card label { font-size: 0.64rem; color: #94a3b8; display: block; margin-bottom: 2px; }
     .metric-card span { font-size: 0.9rem; font-weight: bold; }
+
+    /* Performance Grid */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .stat-box { background: #0f172a; border: 1px solid #1e293b; padding: 10px; border-radius: 6px; text-align: center; }
+    .stat-box label { font-size: 0.65rem; color: #64748b; display: block; }
+    .stat-box span { font-size: 1.1rem; font-weight: bold; }
 
     .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
     select, button, input { width: 100%; padding: 10px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 6px; font-size: 0.85rem; font-weight: 600; }
@@ -32,7 +40,7 @@
     .chart-box { height: 420px; width: 100%; border-radius: 6px; overflow: hidden; border: 1px solid #1e293b; }
     
     .signal-box { background: #1e293b; padding: 12px; border-radius: 6px; margin: 8px 0; }
-    .ai-think-box { font-size: 0.8rem; color: #cbd5e1; background: #0f172a; padding: 10px; border-radius: 4px; border-left: 3px solid #38bdf8; margin-top: 8px; line-height: 1.4; }
+    .ai-think-box { font-size: 0.8rem; color: #cbd5e1; background: #0f172a; padding: 10px; border-radius: 4px; border-left: 3px solid #38bdf8; margin-top: 8px; line-height: 1.4; font-family: monospace; }
     
     .btn-group { display: flex; gap: 8px; margin-top: 8px; }
     .btn-buy { background: #22c55e; color: #000; padding: 10px; border: none; border-radius: 6px; font-weight: bold; width: 50%; cursor: pointer; }
@@ -47,7 +55,7 @@
 <body>
 
   <div class="header">
-    <h1>📈 TradePulse AI — Takashi Kotegawa Quant Engine</h1>
+    <h1>📈 TradePulse AI — Institutional Quant Dashboard</h1>
     <div class="switch-container">
       <span id="status-label" style="color: #ef4444; font-size:0.8rem; font-weight:bold;">AUTO BOT OFF</span>
       <label class="switch">
@@ -77,6 +85,28 @@
   </div>
 
   <div class="card">
+    <h2>Overall Performance & Win Ratio Analytics</h2>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <label>TOTAL TRADES</label>
+        <span id="stat-total-trades">0</span>
+      </div>
+      <div class="stat-box">
+        <label>WINNING TRADES</label>
+        <span id="stat-win-trades" style="color: #22c55e;">0</span>
+      </div>
+      <div class="stat-box">
+        <label>LOSING TRADES</label>
+        <span id="stat-loss-trades" style="color: #ef4444;">0</span>
+      </div>
+      <div class="stat-box">
+        <label>WINNING RATIO</label>
+        <span id="stat-win-ratio" style="color: #38bdf8;">0.0%</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
     <h2>Market Terminal</h2>
     <div class="controls-grid">
       <div>
@@ -98,38 +128,38 @@
   </div>
 
   <div class="card">
-    <h2>Strategy Rules Engine (Kotegawa 1:3 R:R Model)</h2>
+    <h2>Bot Working & Execution Log</h2>
     <div class="signal-box">
       <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-size:0.85rem;">Position Sizing Formula:</span>
-        <span style="color: #22c55e; font-size: 0.78rem; font-weight: bold;">RISK:REWARD = 1 : 3</span>
+        <span style="font-size:0.85rem;">Engine Status:</span>
+        <span id="bot-working-status" style="color: #22c55e; font-size: 0.78rem; font-weight: bold;">STANDBY / MONITORING</span>
       </div>
       <div class="ai-think-box" id="ai-reasoning">
-        🧠 Kotegawa Strategy Matrix Active: 50% Active Capital deployment, 2% risk limit per trade, Auto SL ($100) & Auto TP ($300).
+        [SYSTEM LOG]: Engine Initialized. Kotegawa Risk Sizing (50% Split, 2% Max Risk, 1:3 R:R) Active.
       </div>
     </div>
   </div>
 
   <div class="card">
-    <h2>Capital Settings</h2>
+    <h2>Order Controls</h2>
     <div class="controls-grid">
       <div>
         <label style="font-size:0.7rem; color:#64748b;">TOTAL CAPITAL ($)</label>
         <input type="number" id="wallet-balance-input" value="10000" onchange="updateWalletFromInput()">
       </div>
       <div>
-        <label style="font-size:0.7rem; color:#64748b;">DYNAMIC LOT SIZE (AUTO)</label>
-        <input type="text" id="calculated-lot-display" value="Auto Calculated" disabled style="color: #22c55e;">
+        <label style="font-size:0.7rem; color:#64748b;">LOT SIZE (AUTO SIZED)</label>
+        <input type="text" id="calculated-lot-display" value="Auto Sized" disabled style="color: #22c55e;">
       </div>
     </div>
     <div class="btn-group">
-      <button class="btn-buy" onclick="executeManualTrade('BUY')">Manual BUY (1:3 R:R)</button>
-      <button class="btn-sell" onclick="executeManualTrade('SELL')">Manual SELL (1:3 R:R)</button>
+      <button class="btn-buy" onclick="executeManualTrade('BUY')">Manual BUY</button>
+      <button class="btn-sell" onclick="executeManualTrade('SELL')">Manual SELL</button>
     </div>
   </div>
 
   <div class="card">
-    <h2>Active Executed Trades & Live P&L</h2>
+    <h2>Open Trades</h2>
     <table>
       <thead>
         <tr>
@@ -143,7 +173,26 @@
         </tr>
       </thead>
       <tbody id="active-trades-body">
-        <tr><td colspan="7" style="text-align: center; color: #64748b;">No active trades open.</td></tr>
+        <tr><td colspan="7" style="text-align: center; color: #64748b;">No open trades active.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Trade History</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Asset</th>
+          <th>Type</th>
+          <th>Lots</th>
+          <th>Outcome</th>
+          <th>Realized P&L ($)</th>
+        </tr>
+      </thead>
+      <tbody id="trade-history-body">
+        <tr><td colspan="6" style="text-align: center; color: #64748b;">No closed trades yet.</td></tr>
       </tbody>
     </table>
   </div>
@@ -175,7 +224,8 @@
     let scanInterval = null;
     let pnlInterval = null;
     let activePositions = [];
-    const MAX_OPEN_TRADES = 2; // Strict safety
+    let tradeHistory = [];
+    const MAX_OPEN_TRADES = 2;
 
     function updateWalletFromInput() {
       const val = parseFloat(document.getElementById('wallet-balance-input').value);
@@ -186,11 +236,10 @@
     }
 
     function getKotegawaMetrics() {
-      const activeCapital = totalCapital * 0.50; // 50% for trading
-      const backupCapital = totalCapital * 0.50; // 50% backup
-      const maxRiskPerTrade = activeCapital * 0.02; // 2% daily/trade loss limit
-      const takeProfitTarget = maxRiskPerTrade * 3; // 1:3 Risk to Reward Ratio
-
+      const activeCapital = totalCapital * 0.50;
+      const backupCapital = totalCapital * 0.50;
+      const maxRiskPerTrade = activeCapital * 0.02;
+      const takeProfitTarget = maxRiskPerTrade * 3;
       return { activeCapital, backupCapital, maxRiskPerTrade, takeProfitTarget };
     }
 
@@ -239,11 +288,17 @@
       label.innerText = isBotActive ? "AUTO BOT ON" : "AUTO BOT OFF";
       label.style.color = isBotActive ? "#22c55e" : "#ef4444";
 
+      const workingStatus = document.getElementById('bot-working-status');
+
       if(isBotActive) {
+        workingStatus.innerText = "SCANNING MARKET SIGNALS...";
+        workingStatus.style.color = "#38bdf8";
         startAutoScanning();
       } else {
         clearInterval(scanInterval);
-        document.getElementById('ai-reasoning').innerText = "Bot paused by user.";
+        workingStatus.innerText = "BOT PAUSED";
+        workingStatus.style.color = "#ef4444";
+        document.getElementById('ai-reasoning').innerText = "[SYSTEM LOG]: Bot paused by user.";
       }
     }
 
@@ -252,7 +307,7 @@
         if(!isBotActive) return;
 
         if(activePositions.length >= MAX_OPEN_TRADES) {
-          document.getElementById('ai-reasoning').innerText = `🛡️ Kotegawa Risk Guard: Max ${MAX_OPEN_TRADES} trades active. Protecting capital...`;
+          document.getElementById('ai-reasoning').innerText = `[RISK GUARD]: Max limit of ${MAX_OPEN_TRADES} open trades reached. Monitoring active trades.`;
           return;
         }
 
@@ -268,14 +323,14 @@
         } else if(mockRSI > 70 && mockEMACross === 'BEARISH') {
           triggerTrade(selectedAsset.name, 'SELL');
         } else {
-          document.getElementById('ai-reasoning').innerText = `Scanning ${selectedAsset.name}... Waiting for high probability signal with 1:3 R:R.`;
+          document.getElementById('ai-reasoning').innerText = `[ANALYSIS]: Scanning ${selectedAsset.name} | RSI: ${mockRSI.toFixed(1)} | EMA: ${mockEMACross}. Searching 1:3 R:R setups...`;
         }
       }, 4000);
     }
 
     function triggerTrade(assetName, type) {
       const metrics = getKotegawaMetrics();
-      const calculatedLot = (metrics.maxRiskPerTrade / 1000).toFixed(2); // Dynamic Lot Sizing
+      const calculatedLot = (metrics.maxRiskPerTrade / 1000).toFixed(2);
 
       const newTrade = {
         id: Date.now(),
@@ -288,13 +343,13 @@
       };
 
       activePositions.unshift(newTrade);
-      document.getElementById('ai-reasoning').innerText = `✅ Kotegawa Strategy Trade Executed (${type} on ${assetName}). SL: -$${metrics.maxRiskPerTrade.toFixed(2)} | TP: +$${metrics.takeProfitTarget.toFixed(2)} (1:3 Ratio).`;
+      document.getElementById('ai-reasoning').innerText = `[ORDER EXECUTED]: ${type} on ${assetName}. SL: -$${metrics.maxRiskPerTrade.toFixed(2)} | TP: +$${metrics.takeProfitTarget.toFixed(2)}`;
       renderPositions();
     }
 
     function executeManualTrade(type) {
       if(activePositions.length >= MAX_OPEN_TRADES) {
-        alert(`Max limit reached! Allowed max ${MAX_OPEN_TRADES} open trades.`);
+        alert(`Maximum ${MAX_OPEN_TRADES} trades allowed at a time.`);
         return;
       }
 
@@ -307,13 +362,25 @@
       const index = activePositions.findIndex(t => t.id === id);
       if(index !== -1) {
         const trade = activePositions[index];
-        totalCapital += trade.pnl; // Update wallet capital
+        totalCapital += trade.pnl;
+
+        // Save to History
+        tradeHistory.unshift({
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+          asset: trade.asset,
+          type: trade.type,
+          lots: trade.lots,
+          reason: reason,
+          pnl: trade.pnl
+        });
+
         activePositions.splice(index, 1);
         renderPositions();
+        renderHistory();
         updateMetricsUI();
-        if(reason !== "Manual") {
-          document.getElementById('ai-reasoning').innerText = `🔔 Position Closed (${reason}): P&L: ${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toFixed(2)}`;
-        }
+        updateAnalytics();
+
+        document.getElementById('ai-reasoning').innerText = `[TRADE CLOSED]: ${reason} | P&L: ${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toFixed(2)}`;
       }
     }
 
@@ -321,20 +388,18 @@
       pnlInterval = setInterval(() => {
         for (let i = activePositions.length - 1; i >= 0; i--) {
           let trade = activePositions[i];
-          const step = (Math.random() - 0.47) * 8; // Market volatility
+          const step = (Math.random() - 0.47) * 8;
           trade.pnl += step;
 
-          // Auto Take-Profit 1:3 Trigger
           if(trade.pnl >= trade.tp) {
             trade.pnl = trade.tp;
-            closeTrade(trade.id, "Auto Take-Profit (1:3 R:R Hit)");
+            closeTrade(trade.id, "Take-Profit (TP)");
             continue;
           }
 
-          // Auto Stop-Loss 2% Risk Trigger
           if(trade.pnl <= trade.sl) {
             trade.pnl = trade.sl;
-            closeTrade(trade.id, "Auto Stop-Loss (2% Max Risk Hit)");
+            closeTrade(trade.id, "Stop-Loss (SL)");
             continue;
           }
         }
@@ -345,7 +410,6 @@
 
     function updateMetricsUI() {
       const metrics = getKotegawaMetrics();
-      
       document.getElementById('display-balance').innerText = `$${totalCapital.toFixed(2)}`;
       document.getElementById('display-active-cap').innerText = `$${metrics.activeCapital.toFixed(2)}`;
       document.getElementById('display-backup-cap').innerText = `$${metrics.backupCapital.toFixed(2)}`;
@@ -355,11 +419,23 @@
       document.getElementById('calculated-lot-display').value = `${Math.max(0.01, calculatedLot)} Lots`;
     }
 
+    function updateAnalytics() {
+      const total = tradeHistory.length;
+      const wins = tradeHistory.filter(t => t.pnl > 0).length;
+      const losses = tradeHistory.filter(t => t.pnl <= 0).length;
+      const ratio = total > 0 ? ((wins / total) * 100).toFixed(1) : 0.0;
+
+      document.getElementById('stat-total-trades').innerText = total;
+      document.getElementById('stat-win-trades').innerText = wins;
+      document.getElementById('stat-loss-trades').innerText = losses;
+      document.getElementById('stat-win-ratio').innerText = `${ratio}%`;
+    }
+
     function renderPositions() {
       const tbody = document.getElementById('active-trades-body');
       tbody.innerHTML = '';
       if (activePositions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #64748b;">No active trades open.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #64748b;">No open trades active.</td></tr>';
         return;
       }
       activePositions.forEach(pos => {
@@ -372,6 +448,27 @@
           <td style="color:#22c55e; font-weight:bold;">+$${pos.tp.toFixed(2)}</td>
           <td style="color:${pnlColor}; font-weight:bold;">${pos.pnl >= 0 ? '+' : ''}$${pos.pnl.toFixed(2)}</td>
           <td><button class="btn-close" onclick="closeTrade(${pos.id})">Close</button></td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+    }
+
+    function renderHistory() {
+      const tbody = document.getElementById('trade-history-body');
+      tbody.innerHTML = '';
+      if (tradeHistory.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #64748b;">No closed trades yet.</td></tr>';
+        return;
+      }
+      tradeHistory.forEach(h => {
+        let pnlColor = h.pnl >= 0 ? '#22c55e' : '#ef4444';
+        let row = `<tr>
+          <td style="color:#64748b;">${h.time}</td>
+          <td>${h.asset}</td>
+          <td style="color:${h.type==='BUY'?'#22c55e':'#ef4444'}; font-weight:bold;">${h.type}</td>
+          <td>${h.lots}</td>
+          <td><span style="font-size:0.7rem; padding:2px 6px; border-radius:4px; background:#1e293b; color:${pnlColor};">${h.reason}</span></td>
+          <td style="color:${pnlColor}; font-weight:bold;">${h.pnl >= 0 ? '+' : ''}$${h.pnl.toFixed(2)}</td>
         </tr>`;
         tbody.innerHTML += row;
       });
