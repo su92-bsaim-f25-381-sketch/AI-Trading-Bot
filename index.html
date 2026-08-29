@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TradePulse AI — Realtime Trading Bot & Terminal</title>
+  <title>TradePulse AI — Live Terminal & Bot</title>
   <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
@@ -71,7 +71,7 @@
     <h1>📈 TradePulse AI</h1>
     <div class="binance-live-badge">
       <span class="pulse-dot"></span>
-      <span>BINANCE REALTIME: <span id="binance-live-price" style="color: #fff;">Connecting...</span></span>
+      <span>REALTIME FEED: <span id="binance-live-price" style="color: #fff;">Connecting...</span></span>
     </div>
     <div class="switch-container">
       <span id="status-label" style="color: #ef4444; font-size:0.75rem; font-weight:bold;">AUTO BOT OFF</span>
@@ -102,22 +102,10 @@
   </div>
 
   <div class="stats-grid-top">
-    <div class="stat-card-top">
-      <label>TOTAL TRADES</label>
-      <span id="top-total-trades">0</span>
-    </div>
-    <div class="stat-card-top">
-      <label>WIN TRADES</label>
-      <span id="top-win-trades" style="color: #22c55e;">0</span>
-    </div>
-    <div class="stat-card-top">
-      <label>LOSS TRADES</label>
-      <span id="top-loss-trades" style="color: #ef4444;">0</span>
-    </div>
-    <div class="stat-card-top">
-      <label>WIN RATIO</label>
-      <span id="top-win-ratio" style="color: #38bdf8;">0.0%</span>
-    </div>
+    <div class="stat-card-top"><label>TOTAL TRADES</label><span id="top-total-trades">0</span></div>
+    <div class="stat-card-top"><label>WIN TRADES</label><span id="top-win-trades" style="color: #22c55e;">0</span></div>
+    <div class="stat-card-top"><label>LOSS TRADES</label><span id="top-loss-trades" style="color: #ef4444;">0</span></div>
+    <div class="stat-card-top"><label>WIN RATIO</label><span id="top-win-ratio" style="color: #38bdf8;">0.0%</span></div>
   </div>
 
   <div class="nav-tabs">
@@ -134,17 +122,16 @@
         <div>
           <label style="font-size:0.68rem; color:#64748b;">CATEGORY</label>
           <select id="asset-category" onchange="updateAssetDropdown()">
-            <option value="crypto" selected>Crypto Market (Binance Direct)</option>
+            <option value="metals" selected>Metals & Commodities</option>
+            <option value="crypto">Crypto Market (Binance Direct)</option>
             <option value="forex">Forex Major Pairs</option>
-            <option value="metals">Metals & Commodities</option>
           </select>
         </div>
         <div>
           <label style="font-size:0.68rem; color:#64748b;">SELECT SYMBOL</label>
-          <select id="symbol-select" onchange="loadTradingViewChart()"></select>
+          <select id="symbol-select" onchange="onSymbolChanged()"></select>
         </div>
       </div>
-      
       <div class="chart-box" id="tv_chart_container"></div>
     </div>
   </div>
@@ -155,19 +142,19 @@
       <div class="scanner-display">
         <div class="scanner-row">
           <span style="color:#94a3b8;">Currently Analyzing:</span>
-          <span id="scan-symbol" style="color:#38bdf8; font-weight:bold;">BTC/USDT</span>
+          <span id="scan-symbol" style="color:#38bdf8; font-weight:bold;">XAU/USD</span>
         </div>
         <div class="scanner-row">
-          <span style="color:#94a3b8;">Binance Price:</span>
-          <span id="scan-live-price" style="color:#22c55e; font-weight:bold;">Waiting...</span>
+          <span style="color:#94a3b8;">Live Market Price:</span>
+          <span id="scan-live-price" style="color:#22c55e; font-weight:bold;">Fetching...</span>
         </div>
         <div class="scanner-row">
-          <span style="color:#94a3b8;">Quant Metrics (RSI / MACD / ATR):</span>
+          <span style="color:#94a3b8;">Quant Metrics (RSI / ATR):</span>
           <span id="scan-quant-metrics" style="color:#a855f7; font-weight:bold;">RSI: -- | ATR: --</span>
         </div>
       </div>
       <div class="ai-think-box" id="ai-reasoning">
-        [BOT SYSTEM LOG]: Engine ready. Enable AUTO BOT toggle to start scanning live Binance feeds.
+        [BOT LOG]: Active polling sync enabled. Live prices updating continuously.
       </div>
     </div>
   </div>
@@ -185,14 +172,7 @@
       <h2>Open Active Trades</h2>
       <table>
         <thead>
-          <tr>
-            <th>Asset</th>
-            <th>Type</th>
-            <th>Lots</th>
-            <th>Entry Price</th>
-            <th>Live P&L ($)</th>
-            <th>Action</th>
-          </tr>
+          <tr><th>Asset</th><th>Type</th><th>Lots</th><th>Entry Price</th><th>Live P&L ($)</th><th>Action</th></tr>
         </thead>
         <tbody id="active-trades-body">
           <tr><td colspan="6" style="text-align: center; color: #64748b;">No active trades running.</td></tr>
@@ -206,13 +186,7 @@
       <h2>Closed Trades Log</h2>
       <table>
         <thead>
-          <tr>
-            <th>Time</th>
-            <th>Asset</th>
-            <th>Type</th>
-            <th>Lots</th>
-            <th>Realized P&L ($)</th>
-          </tr>
+          <tr><th>Time</th><th>Asset</th><th>Type</th><th>Lots</th><th>Realized P&L ($)</th></tr>
         </thead>
         <tbody id="trade-history-body">
           <tr><td colspan="5" style="text-align: center; color: #64748b;">No history records found.</td></tr>
@@ -223,87 +197,24 @@
 
   <script>
     const BACKEND_URL = "http://localhost:5000";
-    let currentBinancePrice = 0.00;
-    let currentATR = 10.0;
-    let binanceSocket = null;
+    let liveMarketPrice = 0.00;
+    let currentATR = 2.0;
     let isBotActive = false;
-    let botPollingInterval = null;
-    let lastExecutedSignalTime = 0;
+    let mainLoopInterval = null;
+    let lastExecutedTime = 0;
     let cachedActiveTrades = [];
 
     const assets = {
+      metals: [{ name: "XAU/USD (Gold)", symbol: "OANDA:XAUUSD" }],
       crypto: [
         { name: "BTC/USDT", symbol: "BINANCE:BTCUSDT" },
-        { name: "ETH/USDT", symbol: "BINANCE:ETHUSDT" },
-        { name: "SOL/USDT", symbol: "BINANCE:SOLUSDT" },
-        { name: "BNB/USDT", symbol: "BINANCE:BNBUSDT" }
+        { name: "ETH/USDT", symbol: "BINANCE:ETHUSDT" }
       ],
       forex: [
         { name: "EUR/USD", symbol: "FX:EURUSD" },
         { name: "GBP/USD", symbol: "FX:GBPUSD" }
-      ],
-      metals: [
-        { name: "XAU/USD (Gold)", symbol: "OANDA:XAUUSD" }
       ]
     };
-
-    function connectBinanceWebSocket(symbol = 'btcusdt') {
-      if (binanceSocket) binanceSocket.close();
-
-      const cleanSymbol = symbol.toLowerCase().replace('/', '').replace('binance:', '');
-      binanceSocket = new WebSocket(`wss://stream.binance.com:9443/ws/${cleanSymbol}@ticker`);
-
-      binanceSocket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data && data.c) {
-          currentBinancePrice = parseFloat(data.c);
-          const formattedPrice = `$${currentBinancePrice.toFixed(2)}`;
-          document.getElementById('binance-live-price').innerText = formattedPrice;
-          const scanDisplay = document.getElementById('scan-live-price');
-          if(scanDisplay) scanDisplay.innerText = formattedPrice;
-
-          // Tick-by-tick real-time PnL recalculation
-          updateLivePositionsPnL();
-        }
-      };
-    }
-
-    function updateLivePositionsPnL() {
-      if (!cachedActiveTrades || cachedActiveTrades.length === 0) return;
-      
-      cachedActiveTrades.forEach(pos => {
-        const pnlCell = document.getElementById(`pnl-${pos.id}`);
-        if (pnlCell && currentBinancePrice > 0) {
-          let livePnL = 0;
-          if (pos.type === "BUY") {
-            livePnL = (currentBinancePrice - pos.entry_price) * pos.lots * 10;
-          } else {
-            livePnL = (pos.entry_price - currentBinancePrice) * pos.lots * 10;
-          }
-          pnlCell.style.color = livePnL >= 0 ? '#22c55e' : '#ef4444';
-          pnlCell.innerText = `${livePnL >= 0 ? '+' : ''}$${livePnL.toFixed(2)}`;
-        }
-      });
-    }
-
-    function switchTab(tabId, btnElem) {
-      document.querySelectorAll('.tab-content').forEach(t => {
-        t.classList.remove('active');
-        t.style.display = 'none';
-      });
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-
-      const activeTab = document.getElementById(tabId);
-      if(activeTab) {
-        activeTab.classList.add('active');
-        activeTab.style.display = 'block';
-      }
-      btnElem.classList.add('active');
-
-      if(tabId === 'tab-terminal') loadTradingViewChart();
-      if(tabId === 'tab-trades') fetchActiveTrades();
-      if(tabId === 'tab-analytics') fetchTradeHistory();
-    }
 
     function updateAssetDropdown() {
       const category = document.getElementById('asset-category').value;
@@ -318,11 +229,16 @@
           symbolSelect.appendChild(opt);
         });
       }
+      onSymbolChanged();
+    }
+
+    function onSymbolChanged() {
       loadTradingViewChart();
+      syncLiveMarketData();
     }
 
     function loadTradingViewChart() {
-      const currentSymbol = document.getElementById('symbol-select').value || "BINANCE:BTCUSDT";
+      const currentSymbol = document.getElementById('symbol-select').value || "OANDA:XAUUSD";
       document.getElementById('tv_chart_container').innerHTML = '';
       
       new TradingView.widget({
@@ -335,8 +251,60 @@
         "locale": "en",
         "container_id": "tv_chart_container"
       });
+    }
 
-      connectBinanceWebSocket(currentSymbol.replace('BINANCE:', ''));
+    async function syncLiveMarketData() {
+      const symbolSelect = document.getElementById('symbol-select');
+      const rawSymbol = symbolSelect ? symbolSelect.value : "OANDA:XAUUSD";
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/market?symbol=${rawSymbol}`);
+        const data = await res.json();
+
+        if (data.price) {
+          liveMarketPrice = data.price;
+          currentATR = data.atr;
+
+          const formattedPrice = `$${liveMarketPrice.toFixed(2)}`;
+          document.getElementById('binance-live-price').innerText = formattedPrice;
+          document.getElementById('scan-live-price').innerText = formattedPrice;
+          document.getElementById('scan-symbol').innerText = rawSymbol.replace('OANDA:', '').replace('BINANCE:', '').replace('FX:', '');
+          document.getElementById('scan-quant-metrics').innerText = `RSI: ${data.rsi} | ATR: $${data.atr} | EMA20: $${data.ema20}`;
+
+          const balance = data.wallet_balance;
+          document.getElementById('display-total-cap').innerText = `$${balance.toFixed(2)}`;
+          document.getElementById('display-active-cap').innerText = `$${(balance * 0.5).toFixed(2)}`;
+          document.getElementById('display-backup-cap').innerText = `$${(balance * 0.5).toFixed(2)}`;
+          document.getElementById('display-risk-limit').innerText = `$${(balance * 0.01).toFixed(2)}`;
+
+          document.getElementById('ai-reasoning').innerHTML = `[QUANT SIGNAL]: <b>${data.signal}</b> | Price: $${data.price} | Support: $${data.support} | Resistance: $${data.resistance}`;
+
+          updateLivePositionsPnL();
+
+          if (isBotActive && (data.suggested_action === 'BUY' || data.suggested_action === 'SELL')) {
+            const now = Date.now();
+            if (now - lastExecutedTime > 20000) {
+              lastExecutedTime = now;
+              await sendExecuteTradeAPI(data.suggested_action, data.auto_lot, data.price, data.atr);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Live Data Fetch Error:", err);
+      }
+    }
+
+    function updateLivePositionsPnL() {
+      if (!cachedActiveTrades || cachedActiveTrades.length === 0) return;
+      
+      cachedActiveTrades.forEach(pos => {
+        const pnlCell = document.getElementById(`pnl-${pos.id}`);
+        if (pnlCell && liveMarketPrice > 0) {
+          let livePnL = (pos.type === "BUY") ? (liveMarketPrice - pos.entry_price) * pos.lots * 10 : (pos.entry_price - liveMarketPrice) * pos.lots * 10;
+          pnlCell.style.color = livePnL >= 0 ? '#22c55e' : '#ef4444';
+          pnlCell.innerText = `${livePnL >= 0 ? '+' : ''}$${livePnL.toFixed(2)}`;
+        }
+      });
     }
 
     function toggleBot() {
@@ -344,60 +312,28 @@
       const label = document.getElementById('status-label');
       label.innerText = isBotActive ? "AUTO BOT ON" : "AUTO BOT OFF";
       label.style.color = isBotActive ? "#22c55e" : "#ef4444";
-
-      if (isBotActive) {
-        fetchMarketAnalysis();
-        botPollingInterval = setInterval(fetchMarketAnalysis, 3000);
-      } else {
-        clearInterval(botPollingInterval);
-        document.getElementById('ai-reasoning').innerText = "[BOT SYSTEM LOG]: Auto Bot Paused.";
-      }
     }
 
-    async function fetchMarketAnalysis() {
-      const symbolSelect = document.getElementById('symbol-select');
-      const rawSymbol = symbolSelect ? symbolSelect.value : "BTCUSDT";
-      
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/market?symbol=${rawSymbol}`);
-        const data = await res.json();
+    function switchTab(tabId, btnElem) {
+      document.querySelectorAll('.tab-content').forEach(t => { t.classList.remove('active'); t.style.display = 'none'; });
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 
-        if (data.error) return;
+      const activeTab = document.getElementById(tabId);
+      if (activeTab) { activeTab.classList.add('active'); activeTab.style.display = 'block'; }
+      btnElem.classList.add('active');
 
-        currentATR = data.atr;
-        document.getElementById('scan-symbol').innerText = rawSymbol.replace('BINANCE:', '');
-        document.getElementById('scan-quant-metrics').innerText = `RSI: ${data.rsi} | MACD: ${data.macd} | ATR: $${data.atr} | EMA20: ${data.ema20}`;
-        
-        const balance = data.wallet_balance;
-        document.getElementById('display-total-cap').innerText = `$${balance.toFixed(2)}`;
-        document.getElementById('display-active-cap').innerText = `$${(balance * 0.5).toFixed(2)}`;
-        document.getElementById('display-backup-cap').innerText = `$${(balance * 0.5).toFixed(2)}`;
-        document.getElementById('display-risk-limit').innerText = `$${(balance * 0.01).toFixed(2)}`;
-
-        const reasoningBox = document.getElementById('ai-reasoning');
-        reasoningBox.innerHTML = `[QUANT SIGNAL]: <b>${data.signal}</b> | Price: $${data.price} | Support: $${data.support} | Resistance: $${data.resistance}<br>` +
-                                 `Buyer Pressure: ${data.buy_pressure}% | Recommended Lot: ${data.auto_lot}`;
-
-        // Auto Trading Action
-        if (isBotActive && (data.suggested_action === 'BUY' || data.suggested_action === 'SELL')) {
-          const now = Date.now();
-          if (now - lastExecutedSignalTime > 30000) {
-            lastExecutedSignalTime = now;
-            await sendExecuteTradeAPI(data.suggested_action, data.auto_lot, data.price, data.atr);
-          }
-        }
-      } catch (err) {
-        console.error("Error fetching market analysis:", err);
-      }
+      if (tabId === 'tab-terminal') loadTradingViewChart();
+      if (tabId === 'tab-trades') fetchActiveTrades();
+      if (tabId === 'tab-analytics') fetchTradeHistory();
     }
 
     async function executeManualTrade(type) {
       const selectElem = document.getElementById('symbol-select');
-      const assetName = selectElem.options[selectElem.selectedIndex] ? selectElem.options[selectElem.selectedIndex].text : "BTC/USDT";
-      await sendExecuteTradeAPI(type, 0.10, currentBinancePrice, currentATR, assetName);
+      const assetName = selectElem.options[selectElem.selectedIndex] ? selectElem.options[selectElem.selectedIndex].text : "XAU/USD";
+      await sendExecuteTradeAPI(type, 0.10, liveMarketPrice, currentATR, assetName);
     }
 
-    async function sendExecuteTradeAPI(type, lots, price, atr, symbol = 'BTC/USDT') {
+    async function sendExecuteTradeAPI(type, lots, price, atr, symbol = 'XAU/USD') {
       try {
         const res = await fetch(`${BACKEND_URL}/api/trade/execute`, {
           method: 'POST',
@@ -405,9 +341,7 @@
           body: JSON.stringify({ symbol, type, lots, price, atr })
         });
         const result = await res.json();
-        if (result.status === 'SUCCESS') {
-          fetchActiveTrades();
-        }
+        if (result.status === 'SUCCESS') fetchActiveTrades();
       } catch (err) {
         console.error("Trade execution error:", err);
       }
@@ -450,7 +384,7 @@
         const res = await fetch(`${BACKEND_URL}/api/trade/close`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: tradeId, exit_price: currentBinancePrice })
+          body: JSON.stringify({ id: tradeId, exit_price: liveMarketPrice })
         });
         const data = await res.json();
         if (data.status === 'SUCCESS') {
@@ -506,8 +440,9 @@
 
     document.addEventListener('DOMContentLoaded', function() {
       updateAssetDropdown();
-      connectBinanceWebSocket('BTCUSDT');
       fetchActiveTrades();
+      // Continuous background live polling (Updates price and PnL every 1.5 seconds)
+      mainLoopInterval = setInterval(syncLiveMarketData, 1500);
     });
   </script>
 </body>
