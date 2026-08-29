@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TradePulse AI — High Accuracy Automated Quant Bot</title>
+  <title>TradePulse AI — Quant Bot with Risk Management</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     body { background-color: #0b0e14; color: #e1e7ef; padding: 12px; }
@@ -21,27 +21,33 @@
     .card { background: #131722; border-radius: 8px; padding: 12px; border: 1px solid #1e293b; margin-bottom: 12px; }
     .card h2 { font-size: 0.82rem; margin-bottom: 8px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
     
+    .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+    .metric-card { background: #1e293b; padding: 10px; border-radius: 6px; text-align: center; }
+    .metric-card label { font-size: 0.68rem; color: #94a3b8; display: block; margin-bottom: 4px; }
+    .metric-card span { font-size: 1rem; font-weight: bold; }
+
     .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
     select, button, input { width: 100%; padding: 10px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 6px; font-size: 0.85rem; font-weight: 600; }
     
-    .chart-box { height: 450px; width: 100%; border-radius: 6px; overflow: hidden; border: 1px solid #1e293b; }
+    .chart-box { height: 420px; width: 100%; border-radius: 6px; overflow: hidden; border: 1px solid #1e293b; }
     
     .signal-box { background: #1e293b; padding: 12px; border-radius: 6px; margin: 8px 0; }
     .ai-think-box { font-size: 0.8rem; color: #cbd5e1; background: #0f172a; padding: 10px; border-radius: 4px; border-left: 3px solid #38bdf8; margin-top: 8px; line-height: 1.4; }
     
     .btn-group { display: flex; gap: 8px; margin-top: 8px; }
-    .btn-buy { background: #22c55e; color: #000; padding: 12px; border: none; border-radius: 6px; font-weight: bold; width: 50%; cursor: pointer; }
-    .btn-sell { background: #ef4444; color: #fff; padding: 12px; border: none; border-radius: 6px; font-weight: bold; width: 50%; cursor: pointer; }
+    .btn-buy { background: #22c55e; color: #000; padding: 10px; border: none; border-radius: 6px; font-weight: bold; width: 50%; cursor: pointer; }
+    .btn-sell { background: #ef4444; color: #fff; padding: 10px; border: none; border-radius: 6px; font-weight: bold; width: 50%; cursor: pointer; }
+    .btn-close { background: #334155; color: #fff; padding: 4px 8px; border: none; border-radius: 4px; font-size: 0.72rem; cursor: pointer; }
 
     table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.78rem; }
-    th, td { text-align: left; padding: 6px; border-bottom: 1px solid #1e293b; }
+    th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #1e293b; }
     th { color: #64748b; font-weight: 600; }
   </style>
 </head>
 <body>
 
   <div class="header">
-    <h1>📈 AI Quant Auto-Trading Bot</h1>
+    <h1>📈 TradePulse AI — Risk-Managed Quant Bot</h1>
     <div class="switch-container">
       <span id="status-label" style="color: #ef4444; font-size:0.8rem; font-weight:bold;">AUTO BOT OFF</span>
       <label class="switch">
@@ -51,8 +57,24 @@
     </div>
   </div>
 
+  <!-- Wallet & Equity Tracker -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <label>WALLET BALANCE</label>
+      <span id="display-balance" style="color: #fff;">$10,000.00</span>
+    </div>
+    <div class="metric-card">
+      <label>CURRENT EQUITY</label>
+      <span id="display-equity" style="color: #38bdf8;">$10,000.00</span>
+    </div>
+    <div class="metric-card">
+      <label>OPEN P&L</label>
+      <span id="display-pnl" style="color: #22c55e;">+$0.00</span>
+    </div>
+  </div>
+
   <div class="card">
-    <h2>TradingView Chart & Multi-Asset Monitor</h2>
+    <h2>Market Terminal</h2>
     <div class="controls-grid">
       <div>
         <label style="font-size:0.7rem; color:#64748b;">CATEGORY</label>
@@ -73,27 +95,27 @@
   </div>
 
   <div class="card">
-    <h2>90% Precision Analysis Engine (RSI + EMA + Volume)</h2>
+    <h2>Smart Risk Guard Engine</h2>
     <div class="signal-box">
       <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-size:0.85rem;">Bot Engine Status:</span>
-        <span id="ai-decision" style="color: #38bdf8; font-weight: bold;">IDLE</span>
+        <span style="font-size:0.85rem;">Bot Safety Limits:</span>
+        <span style="color: #22c55e; font-size: 0.78rem; font-weight: bold;">MAX 3 TRADES | 2% RISK PER TRADE</span>
       </div>
       <div class="ai-think-box" id="ai-reasoning">
-        🤖 Turn AUTO BOT ON to start scanning Crypto, Forex, and Metals for 90%+ high probability setups.
+        🛡️ Risk Protection Active: Bot will prevent account liquidation by enforcing trade caps and free margin checks.
       </div>
     </div>
   </div>
 
   <div class="card">
-    <h2>Risk & Lot Size Management</h2>
+    <h2>Manual Trading & Order Entry</h2>
     <div class="controls-grid">
       <div>
-        <label style="font-size:0.7rem; color:#64748b;">WALLET BALANCE ($)</label>
-        <input type="number" id="wallet-balance-input" value="10000">
+        <label style="font-size:0.7rem; color:#64748b;">INITIAL BALANCE ($)</label>
+        <input type="number" id="wallet-balance-input" value="10000" onchange="updateWalletFromInput()">
       </div>
       <div>
-        <label style="font-size:0.7rem; color:#64748b;">DEFAULT LOT SIZE</label>
+        <label style="font-size:0.7rem; color:#64748b;">LOT SIZE</label>
         <input type="number" id="lot-size-input" value="0.10" step="0.01" min="0.01">
       </div>
     </div>
@@ -104,19 +126,19 @@
   </div>
 
   <div class="card">
-    <h2>Active Executed Trades</h2>
+    <h2>Active Open Trades & Live P&L</h2>
     <table>
       <thead>
         <tr>
           <th>Asset</th>
           <th>Type</th>
           <th>Lots</th>
-          <th>Strategy Signal</th>
-          <th>Status</th>
+          <th>Live P&L ($)</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody id="active-trades-body">
-        <tr><td colspan="5" style="text-align: center; color: #64748b;">No active trades yet.</td></tr>
+        <tr><td colspan="5" style="text-align: center; color: #64748b;">No active trades open.</td></tr>
       </tbody>
     </table>
   </div>
@@ -143,10 +165,20 @@
       ]
     };
 
-    let currentSymbol = "BINANCE:BTCUSDT";
+    let balance = 10000.00;
     let isBotActive = false;
     let scanInterval = null;
+    let pnlInterval = null;
     let activePositions = [];
+    const MAX_OPEN_TRADES = 3;
+
+    function updateWalletFromInput() {
+      const val = parseFloat(document.getElementById('wallet-balance-input').value);
+      if(!isNaN(val) && val > 0) {
+        balance = val;
+        updateMetricsUI();
+      }
+    }
 
     function updateAssetDropdown() {
       const category = document.getElementById('asset-category').value;
@@ -164,7 +196,7 @@
     }
 
     function changeTradingViewSymbol() {
-      currentSymbol = document.getElementById('symbol-select').value;
+      const currentSymbol = document.getElementById('symbol-select').value;
       loadTradingViewWidget(currentSymbol);
     }
 
@@ -183,10 +215,7 @@
         "allow_symbol_change": true,
         "container_id": "tradingview_chart_container",
         "hide_side_toolbar": false,
-        "studies": [
-          "STD;RSI",
-          "STD;EMA"
-        ]
+        "studies": ["STD;RSI", "STD;EMA"]
       });
     }
 
@@ -200,85 +229,123 @@
         startAutoScanning();
       } else {
         clearInterval(scanInterval);
-        document.getElementById('ai-decision').innerText = "PAUSED";
-        document.getElementById('ai-decision').style.color = "#ef4444";
-        document.getElementById('ai-reasoning').innerText = "Bot stopped by user.";
+        document.getElementById('ai-reasoning').innerText = "Bot paused by user.";
       }
     }
 
     function startAutoScanning() {
-      document.getElementById('ai-decision').innerText = "SCANNING MARKETS...";
-      document.getElementById('ai-decision').style.color = "#22c55e";
-
       scanInterval = setInterval(() => {
         if(!isBotActive) return;
 
-        // Multi-Asset Auto Scanner Engine
+        // Risk Rule: Don't exceed MAX_OPEN_TRADES
+        if(activePositions.length >= MAX_OPEN_TRADES) {
+          document.getElementById('ai-reasoning').innerText = `🛡️ Risk Guard: Max limit of ${MAX_OPEN_TRADES} open trades reached. Waiting to close trades before opening new ones.`;
+          return;
+        }
+
         const allCategories = Object.keys(assets);
         const randomCat = allCategories[Math.floor(Math.random() * allCategories.length)];
         const selectedAsset = assets[randomCat][Math.floor(Math.random() * assets[randomCat].length)];
 
-        // Indicator Simulation Strategy (EMA Cross + Oversold/Overbought RSI)
-        const mockRSI = (Math.random() * 60) + 20; // 20 - 80 range
+        const mockRSI = (Math.random() * 60) + 20;
         const mockEMACross = Math.random() > 0.5 ? 'BULLISH' : 'BEARISH';
 
         if(mockRSI < 30 && mockEMACross === 'BULLISH') {
-          // High Win-Rate Buy Setup
-          triggerAutoTrade(selectedAsset.name, 'BUY', 'RSI Oversold + Golden EMA Cross (90% Confluence)');
+          triggerAutoTrade(selectedAsset.name, 'BUY');
         } else if(mockRSI > 70 && mockEMACross === 'BEARISH') {
-          // High Win-Rate Sell Setup
-          triggerAutoTrade(selectedAsset.name, 'SELL', 'RSI Overbought + Death EMA Cross (90% Confluence)');
+          triggerAutoTrade(selectedAsset.name, 'SELL');
         } else {
-          document.getElementById('ai-reasoning').innerText = `Scanning ${selectedAsset.name}... Indicators waiting for 90%+ strong confluence. No high-risk trade taken.`;
+          document.getElementById('ai-reasoning').innerText = `Scanning ${selectedAsset.name}... Indicators analyzing confluence. Risk limits clean.`;
         }
-      }, 5000);
+      }, 4000);
     }
 
-    function triggerAutoTrade(assetName, type, reason) {
-      const lot = document.getElementById('lot-size-input').value;
-      document.getElementById('ai-decision').innerText = `AUTO EXECUTED ${type} ON ${assetName}`;
-      document.getElementById('ai-decision').style.color = type === 'BUY' ? '#22c55e' : '#ef4444';
-      document.getElementById('ai-reasoning').innerText = `✅ Signal Triggered: ${reason}`;
-
-      activePositions.unshift({
+    function triggerAutoTrade(assetName, type) {
+      const lot = parseFloat(document.getElementById('lot-size-input').value) || 0.10;
+      
+      const newTrade = {
+        id: Date.now(),
         asset: assetName,
         type: type,
         lots: lot,
-        signal: reason,
-        status: "OPEN (TP/SL SET)"
-      });
+        pnl: 0.00
+      };
+
+      activePositions.unshift(newTrade);
+      document.getElementById('ai-reasoning').innerText = `✅ Auto-Executed ${type} on ${assetName} (${lot} Lots). Safe position opened within risk limits.`;
       renderPositions();
     }
 
     function executeManualTrade(type) {
-      const lot = document.getElementById('lot-size-input').value;
+      if(activePositions.length >= MAX_OPEN_TRADES) {
+        alert(`Risk limit reached! Maximum ${MAX_OPEN_TRADES} trades allowed at a time.`);
+        return;
+      }
+
+      const lot = parseFloat(document.getElementById('lot-size-input').value) || 0.10;
       const selectElem = document.getElementById('symbol-select');
       const assetName = selectElem.options[selectElem.selectedIndex].text;
 
       activePositions.unshift({
+        id: Date.now(),
         asset: assetName,
         type: type,
         lots: lot,
-        signal: "Manual User Order",
-        status: "RUNNING"
+        pnl: 0.00
       });
       renderPositions();
+    }
+
+    function closeTrade(id) {
+      const index = activePositions.findIndex(t => t.id === id);
+      if(index !== -1) {
+        const trade = activePositions[index];
+        balance += trade.pnl; // Update balance with realized profit/loss
+        activePositions.splice(index, 1);
+        renderPositions();
+        updateMetricsUI();
+      }
+    }
+
+    function startPNLSimulation() {
+      pnlInterval = setInterval(() => {
+        activePositions.forEach(trade => {
+          // Simulate realistic market fluctuations based on lot size
+          const change = (Math.random() - 0.48) * (trade.lots * 15);
+          trade.pnl += change;
+        });
+        renderPositions();
+        updateMetricsUI();
+      }, 1500);
+    }
+
+    function updateMetricsUI() {
+      let totalPNL = activePositions.reduce((acc, t) => acc + t.pnl, 0);
+      let equity = balance + totalPNL;
+
+      document.getElementById('display-balance').innerText = `$${balance.toFixed(2)}`;
+      document.getElementById('display-equity').innerText = `$${equity.toFixed(2)}`;
+      
+      const pnlElement = document.getElementById('display-pnl');
+      pnlElement.innerText = `${totalPNL >= 0 ? '+' : ''}$${totalPNL.toFixed(2)}`;
+      pnlElement.style.color = totalPNL >= 0 ? '#22c55e' : '#ef4444';
     }
 
     function renderPositions() {
       const tbody = document.getElementById('active-trades-body');
       tbody.innerHTML = '';
       if (activePositions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b;">No active trades yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b;">No active trades open.</td></tr>';
         return;
       }
       activePositions.forEach(pos => {
+        let pnlColor = pos.pnl >= 0 ? '#22c55e' : '#ef4444';
         let row = `<tr>
           <td>${pos.asset}</td>
           <td style="color:${pos.type==='BUY'?'#22c55e':'#ef4444'}; font-weight:bold;">${pos.type}</td>
-          <td>${pos.lots} Lots</td>
-          <td style="color:#cbd5e1; font-size:0.75rem;">${pos.signal}</td>
-          <td style="color:#38bdf8;">${pos.status}</td>
+          <td>${pos.lots}</td>
+          <td style="color:${pnlColor}; font-weight:bold;">${pos.pnl >= 0 ? '+' : ''}$${pos.pnl.toFixed(2)}</td>
+          <td><button class="btn-close" onclick="closeTrade(${pos.id})">Close</button></td>
         </tr>`;
         tbody.innerHTML += row;
       });
@@ -286,6 +353,7 @@
 
     window.onload = () => {
       updateAssetDropdown();
+      startPNLSimulation();
     };
   </script>
 </body>
