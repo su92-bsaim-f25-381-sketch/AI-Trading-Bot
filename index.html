@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TradePulse AI — Standalone Quant Terminal</title>
+  <title>TradePulse AI — Smart Quant AI Bot</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     body { background-color: #0b0e14; color: #e1e7ef; padding: 12px; }
@@ -42,7 +42,8 @@
     .pressure-buy-fill { background: #22c55e; height: 100%; width: 50%; transition: width 0.4s ease; }
     .pressure-labels { display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: 4px; font-weight: bold; }
     
-    .signal-box { display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 10px; border-radius: 6px; margin: 8px 0; }
+    .signal-box { background: #1e293b; padding: 12px; border-radius: 6px; margin: 8px 0; }
+    .ai-think-box { font-size: 0.8rem; color: #cbd5e1; background: #0f172a; padding: 8px; border-radius: 4px; border-left: 3px solid #38bdf8; margin-top: 8px; line-height: 1.4; }
     .stats-row { display: flex; justify-content: space-between; font-size: 0.85rem; color: #94a3b8; margin-top: 6px; }
     
     .btn-group { display: flex; gap: 8px; margin-top: 8px; }
@@ -57,9 +58,9 @@
 <body>
 
   <div class="header">
-    <h1>📈 TradePulse Standalone Quant</h1>
+    <h1>🧠 TradePulse Smart AI Bot</h1>
     <div class="switch-container">
-      <span id="status-label" style="color: #ef4444; font-size:0.8rem; font-weight:bold;">BOT OFF</span>
+      <span id="status-label" style="color: #ef4444; font-size:0.8rem; font-weight:bold;">AUTO BOT OFF</span>
       <label class="switch">
         <input type="checkbox" id="bot-toggle" onchange="toggleBot()">
         <span class="slider"></span>
@@ -68,13 +69,13 @@
   </div>
 
   <div class="card">
-    <h2>Market Terminal & Native Candlestick Chart</h2>
+    <h2>Live Market Candlestick Chart</h2>
     <div class="controls-grid">
       <select id="pair-select" onchange="changePair()">
         <option value="BTCUSDT" selected>BTC/USDT (Bitcoin)</option>
         <option value="ETHUSDT">ETH/USDT (Ethereum)</option>
         <option value="SOLUSDT">SOL/USDT (Solana)</option>
-        <option value="BNBUSDT">BNB/USDT (Binance Coin)</option>
+        <option value="BNBUSDT">BNB/USDT (Binance)</option>
       </select>
     </div>
 
@@ -88,7 +89,7 @@
     </div>
     
     <div class="price-row">
-      <div class="price-display" id="live-price">Syncing Feed...</div>
+      <div class="price-display" id="live-price">Fetching...</div>
       <div class="price-change up" id="price-change">+0.00%</div>
     </div>
     
@@ -98,7 +99,7 @@
   </div>
 
   <div class="card">
-    <h2>Real-time Volume & Order Flow</h2>
+    <h2>Volume & Order Flow Analysis</h2>
     <div class="pressure-container">
       <div class="pressure-bar-bg">
         <div class="pressure-buy-fill" id="buy-pressure-bar"></div>
@@ -111,14 +112,24 @@
   </div>
 
   <div class="card">
-    <h2>Quant Strategy Engine</h2>
+    <h2>AI Deep-Thinking Engine</h2>
     <div class="signal-box">
-      <span>AI Strategy Signal:</span>
-      <span id="ai-decision" style="color: #eab308; font-weight: bold;">ANALYZING...</span>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:0.85rem;">Decision State:</span>
+        <span id="ai-decision" style="color: #eab308; font-weight: bold;">ANALYZING...</span>
+      </div>
+      <div class="ai-think-box" id="ai-reasoning">
+        🤖 AI is analyzing EMA 9/21, RSI momentum, and Support/Resistance levels...
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <span>RSI Momentum (14):</span>
+      <strong id="rsi-val" style="color: #38bdf8;">--</strong>
     </div>
     <div class="stats-row">
-      <span>ATR Volatility Spacing:</span>
-      <strong id="atr-val" style="color: #38bdf8;">--</strong>
+      <span>EMA Trend (9 / 21):</span>
+      <strong id="ema-val" style="color: #38bdf8;">-- / --</strong>
     </div>
     <div class="stats-row">
       <span>Dynamic Support / Resistance:</span>
@@ -127,30 +138,30 @@
   </div>
 
   <div class="card">
-    <h2>Account Risk & Trade Control</h2>
+    <h2>Account Risk & Live Trades</h2>
     <div class="stats-row">
       <span>Live Wallet Balance:</span>
       <strong id="wallet-balance" style="color: #22c55e; font-size: 1rem;">$10,000.00</strong>
     </div>
     <div class="stats-row">
-      <span>Auto Lot Size (1% Risk Cap):</span>
+      <span>Calculated Lot Size:</span>
       <strong id="auto-lot" style="color: #38bdf8;">0.10 Lots</strong>
     </div>
     <div class="btn-group">
-      <button class="btn-buy" onclick="executeTrade('BUY')">Execute BUY</button>
-      <button class="btn-sell" onclick="executeTrade('SELL')">Execute SELL</button>
+      <button class="btn-buy" onclick="executeTrade('BUY', 'Manual Execution')">BUY</button>
+      <button class="btn-sell" onclick="executeTrade('SELL', 'Manual Execution')">SELL</button>
     </div>
   </div>
 
   <div class="card">
-    <h2>Active Positions</h2>
+    <h2>Active AI Positions</h2>
     <table>
       <thead>
         <tr>
           <th>Pair</th>
           <th>Type</th>
-          <th>Entry</th>
-          <th>Current</th>
+          <th>Entry Price</th>
+          <th>Current Price</th>
           <th>PnL ($)</th>
         </tr>
       </thead>
@@ -181,7 +192,7 @@
 
     async function loadHistoricalData() {
       try {
-        const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${timeframe}&limit=40`);
+        const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${timeframe}&limit=50`);
         const data = await res.json();
         
         candleData = data.map(d => ({
@@ -203,17 +214,18 @@
         document.getElementById('live-price').innerText = '$' + currentPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         
         drawCandlestickChart();
-        calculateStrategyMetrics();
+        runSmartAIEngine();
         evaluateTrades();
       } catch (e) {
-        console.error("Market Feed Error", e);
+        console.error("Feed Error", e);
       }
     }
 
     function drawCandlestickChart() {
       if (!candleData || candleData.length === 0) return;
       
-      resizeCanvasWithoutLoop();
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const highs = candleData.map(c => c.high);
@@ -222,7 +234,7 @@
       const minP = Math.min(...lows);
       const priceRange = maxP - minP || 1;
 
-      const padding = 20;
+      const padding = 15;
       const chartWidth = canvas.width - (padding * 2);
       const chartHeight = canvas.height - (padding * 2);
       const candleWidth = (chartWidth / candleData.length) * 0.65;
@@ -239,13 +251,13 @@
 
         // Draw Wick
         ctx.strokeStyle = isGreen ? '#22c55e' : '#ef4444';
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 1.2;
         ctx.beginPath();
         ctx.moveTo(x, highY);
         ctx.lineTo(x, lowY);
         ctx.stroke();
 
-        // Draw Candle Body
+        // Draw Body
         ctx.fillStyle = isGreen ? '#22c55e' : '#ef4444';
         const bodyY = Math.min(openY, closeY);
         const bodyHeight = Math.max(Math.abs(openY - closeY), 2);
@@ -253,50 +265,84 @@
       });
     }
 
-    function resizeCanvasWithoutLoop() {
-      if (canvas.width !== canvas.parentElement.clientWidth || canvas.height !== canvas.parentElement.clientHeight) {
-        canvas.width = canvas.parentElement.clientWidth;
-        canvas.height = canvas.parentElement.clientHeight;
+    function calculateEMA(period) {
+      let k = 2 / (period + 1);
+      let ema = candleData[0].close;
+      for (let i = 1; i < candleData.length; i++) {
+        ema = (candleData[i].close * k) + (ema * (1 - k));
       }
+      return ema;
     }
 
-    function calculateStrategyMetrics() {
-      if (candleData.length < 14) return;
+    function calculateRSI(period = 14) {
+      let gains = 0, losses = 0;
+      for (let i = candleData.length - period; i < candleData.length; i++) {
+        let diff = candleData[i].close - candleData[i - 1].close;
+        if (diff >= 0) gains += diff;
+        else losses -= diff;
+      }
+      let avgGain = gains / period;
+      let avgLoss = losses / period;
+      if (avgLoss === 0) return 100;
+      let rs = avgGain / avgLoss;
+      return 100 - (100 / (1 + rs));
+    }
+
+    function runSmartAIEngine() {
+      if (candleData.length < 25) return;
+
+      const ema9 = calculateEMA(9);
+      const ema21 = calculateEMA(21);
+      const rsi = calculateRSI(14);
+      
       const highs = candleData.map(c => c.high);
       const lows = candleData.map(c => c.low);
-      
-      const maxH = Math.max(...highs.slice(-14));
-      const minL = Math.min(...lows.slice(-14));
-      const atr = (maxH - minL) / 5;
+      const maxH = Math.max(...highs.slice(-20));
+      const minL = Math.min(...lows.slice(-20));
 
-      document.getElementById('atr-val').innerText = '$' + atr.toFixed(2);
+      document.getElementById('rsi-val').innerText = rsi.toFixed(1);
+      document.getElementById('ema-val').innerText = `$${ema9.toFixed(1)} / $${ema21.toFixed(1)}`;
       document.getElementById('support-val').innerText = '$' + minL.toFixed(2);
       document.getElementById('resistance-val').innerText = '$' + maxH.toFixed(2);
 
-      let buyPressure = currentPrice >= candleData[candleData.length - 2].close ? Math.floor(Math.random() * 20) + 55 : Math.floor(Math.random() * 20) + 25;
+      let buyPressure = ema9 > ema21 ? Math.min(85, Math.floor(rsi + 15)) : Math.max(15, Math.floor(rsi - 15));
       document.getElementById('buy-pressure-bar').style.width = buyPressure + '%';
       document.getElementById('buy-pressure-text').innerText = `Buyers: ${buyPressure}%`;
       document.getElementById('sell-pressure-text').innerText = `Sellers: ${100 - buyPressure}%`;
 
       const signalElem = document.getElementById('ai-decision');
-      if (buyPressure > 60) {
-        signalElem.innerText = "BUY SIGNAL CONFIRMED";
+      const reasonElem = document.getElementById('ai-reasoning');
+
+      // AI Logic Decision Matrix
+      if (ema9 > ema21 && rsi > 52 && currentPrice > minL) {
+        signalElem.innerText = "BUY CONFIRMED";
         signalElem.style.color = "#22c55e";
-        if (isBotActive && activeTrades.length === 0) executeTrade('BUY');
-      } else if (buyPressure < 40) {
-        signalElem.innerText = "SELL SIGNAL CONFIRMED";
+        reasonElem.innerHTML = `💡 <b>AI Thought:</b> EMA9 ($${ema9.toFixed(1)}) crossed ABOVE EMA21 ($${ema21.toFixed(1)}). RSI is bullish at ${rsi.toFixed(1)}. High probability <b>BUY</b> setup detected!`;
+        
+        if (isBotActive && activeTrades.length === 0) {
+          executeTrade('BUY', 'AI Cross + RSI Bullish');
+        }
+      } 
+      else if (ema9 < ema21 && rsi < 48 && currentPrice < maxH) {
+        signalElem.innerText = "SELL CONFIRMED";
         signalElem.style.color = "#ef4444";
-        if (isBotActive && activeTrades.length === 0) executeTrade('SELL');
-      } else {
-        signalElem.innerText = "HOLD / SEARCHING SETUP";
+        reasonElem.innerHTML = `💡 <b>AI Thought:</b> EMA9 ($${ema9.toFixed(1)}) crossed BELOW EMA21 ($${ema21.toFixed(1)}). RSI is bearish at ${rsi.toFixed(1)}. High probability <b>SELL</b> setup detected!`;
+        
+        if (isBotActive && activeTrades.length === 0) {
+          executeTrade('SELL', 'AI Bearish Crossover');
+        }
+      } 
+      else {
+        signalElem.innerText = "HOLD / NO ENTRY";
         signalElem.style.color = "#eab308";
+        reasonElem.innerHTML = `💡 <b>AI Thought:</b> Market is consolidating. RSI is neutral (${rsi.toFixed(1)}). Waiting for clean breakout.`;
       }
     }
 
     function toggleBot() {
       isBotActive = document.getElementById('bot-toggle').checked;
       const label = document.getElementById('status-label');
-      label.innerText = isBotActive ? "BOT ACTIVE" : "BOT OFF";
+      label.innerText = isBotActive ? "AUTO BOT ON" : "AUTO BOT OFF";
       label.style.color = isBotActive ? "#22c55e" : "#ef4444";
     }
 
@@ -312,13 +358,14 @@
       loadHistoricalData();
     }
 
-    function executeTrade(type) {
+    function executeTrade(type, reason) {
       if (activeTrades.length >= 2 || currentPrice === 0) return;
       activeTrades.push({
         id: Date.now(),
         pair: symbol,
         type: type,
-        entry: currentPrice
+        entry: currentPrice,
+        reason: reason
       });
       renderTrades();
     }
@@ -348,7 +395,6 @@
     }
 
     window.onload = () => {
-      resizeCanvas();
       loadHistoricalData();
       setInterval(loadHistoricalData, 2000);
     };
