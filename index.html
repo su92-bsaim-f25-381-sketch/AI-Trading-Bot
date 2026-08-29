@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TradePulse AI — World Top Indicators Engine</title>
+  <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     body { background-color: #0b0e14; color: #e1e7ef; padding: 12px; }
@@ -19,14 +20,14 @@
     input:checked + .slider { background-color: #22c55e; }
     input:checked + .slider:before { transform: translateX(22px); }
 
-    /* Top Capital & Risk Management Cards */
+    /* Risk & Capital Cards */
     .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 6px; }
     .stats-grid-top { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
     
     .metric-card { background: #1e293b; padding: 8px; border-radius: 6px; text-align: center; }
     .metric-card label { font-size: 0.6rem; color: #94a3b8; display: block; margin-bottom: 2px; }
     .metric-card span { font-size: 0.85rem; font-weight: bold; }
-    .metric-card input { background: transparent; border: 1px dashed #38bdf8; color: #38bdf8; text-align: center; font-weight: bold; font-size: 0.85rem; width: 100%; padding: 2px; border-radius: 4px; }
+    .metric-card input { background: #0f172a; border: 1px solid #38bdf8; color: #38bdf8; text-align: center; font-weight: bold; font-size: 0.85rem; width: 100%; padding: 4px; border-radius: 4px; }
 
     .stat-card-top { background: #0f172a; border: 1px solid #1e293b; padding: 6px; border-radius: 6px; text-align: center; }
     .stat-card-top label { font-size: 0.58rem; color: #64748b; display: block; }
@@ -47,7 +48,7 @@
     .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
     select, button, input { width: 100%; padding: 10px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 6px; font-size: 0.85rem; font-weight: 600; }
     
-    .chart-box { height: 480px; width: 100%; border-radius: 6px; overflow: hidden; border: 1px solid #1e293b; background: #0f172a; position: relative; }
+    .chart-box { height: 480px; width: 100%; border-radius: 6px; overflow: hidden; border: 1px solid #1e293b; background: #0f172a; }
     
     .signal-box { background: #1e293b; padding: 12px; border-radius: 6px; margin: 8px 0; }
     .ai-think-box { font-size: 0.78rem; color: #cbd5e1; background: #0f172a; padding: 10px; border-radius: 4px; border-left: 3px solid #38bdf8; margin-top: 8px; line-height: 1.4; font-family: monospace; }
@@ -79,19 +80,19 @@
 
   <div class="metrics-grid">
     <div class="metric-card">
-      <label>SET YOUR CAPITAL ($)</label>
+      <label>SET BALANCE ($)</label>
       <input type="number" id="input-total-capital" value="10000" oninput="updateCapitalFromInput()">
     </div>
     <div class="metric-card">
-      <label>ACTIVE (50%)</label>
+      <label>ACTIVE CAPITAL (50%)</label>
       <span id="display-active-cap" style="color: #38bdf8;">$5,000.00</span>
     </div>
     <div class="metric-card">
-      <label>BACKUP (50%)</label>
+      <label>BACKUP CAPITAL (50%)</label>
       <span id="display-backup-cap" style="color: #a855f7;">$5,000.00</span>
     </div>
     <div class="metric-card">
-      <label>MAX RISK (2%)</label>
+      <label>MAX RISK PER TRADE (2%)</label>
       <span id="display-risk-limit" style="color: #ef4444;">$100.00</span>
     </div>
   </div>
@@ -130,27 +131,25 @@
           <label style="font-size:0.68rem; color:#64748b;">CATEGORY</label>
           <select id="asset-category" onchange="updateAssetDropdown()">
             <option value="crypto" selected>Crypto Market (Binance)</option>
-            <option value="forex">Forex Major & Minor (FXCM/OANDA)</option>
+            <option value="forex">Forex Pairs</option>
             <option value="metals">Metals & Commodities</option>
-            <option value="stocks">Shares & Indices (NASDAQ/US)</option>
+            <option value="stocks">Stocks & Indices</option>
           </select>
         </div>
         <div>
-          <label style="font-size:0.68rem; color:#64748b;">SYMBOL (ALL ASSETS)</label>
-          <select id="symbol-select" onchange="changeTradingViewSymbol()">
-            </select>
+          <label style="font-size:0.68rem; color:#64748b;">SYMBOL SELECT</label>
+          <select id="symbol-select" onchange="loadTradingViewChart()">
+          </select>
         </div>
       </div>
       
-      <div class="chart-box" id="tradingview_chart_container">
-        <iframe id="tv_iframe" src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&symbol=BINANCE%3ABTCUSDT&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=131722&theme=dark&style=1&timezone=Etc%2FUTC" style="width: 100%; height: 100%; border: none;"></iframe>
-      </div>
+      <div class="chart-box" id="tv_chart_container"></div>
     </div>
   </div>
 
   <div id="tab-bot-status" class="tab-content">
     <div class="card">
-      <h2>Top Trader Indicators Suite</h2>
+      <h2>Indicator Strategy Engine</h2>
       <div style="margin-bottom: 10px;">
         <span class="indicator-badge">200 EMA Trend</span>
         <span class="indicator-badge">RSI 14 Momentum</span>
@@ -159,11 +158,11 @@
       </div>
       <div class="signal-box">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:0.85rem;">Engine Status:</span>
+          <span style="font-size:0.85rem;">Status:</span>
           <span id="bot-working-status" style="color: #ef4444; font-size: 0.78rem; font-weight: bold;">STANDBY / OFF</span>
         </div>
         <div class="ai-think-box" id="ai-reasoning">
-          [SYSTEM LOG]: System initialized. Enter your custom balance and turn AUTO BOT ON to execute 200 EMA + RSI + ATR Confluence strategy.
+          [SYSTEM LOG]: Engine ready. Enter balance & toggle AUTO BOT ON to auto-execute orders.
         </div>
       </div>
     </div>
@@ -171,15 +170,15 @@
 
   <div id="tab-trades" class="tab-content">
     <div class="card">
-      <h2>Manual & Bot Controls</h2>
+      <h2>Execution Controls</h2>
       <div class="controls-grid">
         <div>
-          <label style="font-size:0.7rem; color:#64748b;">CALCULATED LOT SIZE (AUTO)</label>
+          <label style="font-size:0.7rem; color:#64748b;">LOT SIZE (AUTO SIZED)</label>
           <input type="text" id="calculated-lot-display" value="0.10 Lots" disabled style="color: #22c55e;">
         </div>
         <div>
-          <label style="font-size:0.7rem; color:#64748b;">RISK REWARD RATIO</label>
-          <input type="text" value="1 : 3 (Kotegawa Rule)" disabled style="color: #38bdf8;">
+          <label style="font-size:0.7rem; color:#64748b;">RISK REWARD</label>
+          <input type="text" value="1 : 3 Ratio" disabled style="color: #38bdf8;">
         </div>
       </div>
       <div class="btn-group">
@@ -189,7 +188,7 @@
     </div>
 
     <div class="card">
-      <h2>Open Active Trades</h2>
+      <h2>Active Positions</h2>
       <table>
         <thead>
           <tr>
@@ -203,7 +202,7 @@
           </tr>
         </thead>
         <tbody id="active-trades-body">
-          <tr><td colspan="7" style="text-align: center; color: #64748b;">No open trades active.</td></tr>
+          <tr><td colspan="7" style="text-align: center; color: #64748b;">No active trades.</td></tr>
         </tbody>
       </table>
     </div>
@@ -211,7 +210,7 @@
 
   <div id="tab-analytics" class="tab-content">
     <div class="card">
-      <h2>Trade History Log</h2>
+      <h2>History Log</h2>
       <table>
         <thead>
           <tr>
@@ -219,7 +218,7 @@
             <th>Asset</th>
             <th>Type</th>
             <th>Lots</th>
-            <th>Outcome Reason</th>
+            <th>Reason</th>
             <th>Realized P&L ($)</th>
           </tr>
         </thead>
@@ -231,7 +230,6 @@
   </div>
 
   <script>
-    // Complete Asset List across all market categories
     const assets = {
       crypto: [
         { name: "BTC/USDT (Bitcoin)", symbol: "BINANCE:BTCUSDT" },
@@ -245,46 +243,34 @@
         { name: "DOT/USDT (Polkadot)", symbol: "BINANCE:DOTUSDT" },
         { name: "LINK/USDT (Chainlink)", symbol: "BINANCE:LINKUSDT" },
         { name: "MATIC/USDT (Polygon)", symbol: "BINANCE:MATICUSDT" },
-        { name: "SHIB/USDT (Shiba Inu)", symbol: "BINANCE:SHIBUSDT" },
+        { name: "SHIB/USDT (Shiba)", symbol: "BINANCE:SHIBUSDT" },
         { name: "LTC/USDT (Litecoin)", symbol: "BINANCE:LTCUSDT" },
         { name: "PEPE/USDT (Pepe)", symbol: "BINANCE:PEPEUSDT" },
-        { name: "NEAR/USDT (Near Protocol)", symbol: "BINANCE:NEARUSDT" },
-        { name: "APT/USDT (Aptos)", symbol: "BINANCE:APTUSDT" },
-        { name: "SUI/USDT (Sui)", symbol: "BINANCE:SUIUSDT" },
-        { name: "UNI/USDT (Uniswap)", symbol: "BINANCE:UNIUSDT" }
+        { name: "NEAR/USDT (Near)", symbol: "BINANCE:NEARUSDT" },
+        { name: "SUI/USDT (Sui)", symbol: "BINANCE:SUIUSDT" }
       ],
       forex: [
-        { name: "EUR/USD (Euro / US Dollar)", symbol: "FX:EURUSD" },
-        { name: "GBP/USD (British Pound / US Dollar)", symbol: "FX:GBPUSD" },
-        { name: "USD/JPY (US Dollar / Japanese Yen)", symbol: "FX:USDJPY" },
-        { name: "AUD/USD (Australian Dollar / US Dollar)", symbol: "FX:AUDUSD" },
-        { name: "USD/CAD (US Dollar / Canadian Dollar)", symbol: "FX:USDCAD" },
-        { name: "USD/CHF (US Dollar / Swiss Franc)", symbol: "FX:USDCHF" },
-        { name: "NZD/USD (New Zealand Dollar / US Dollar)", symbol: "FX:NZDUSD" },
-        { name: "EUR/GBP (Euro / British Pound)", symbol: "FX:EURGBP" },
-        { name: "EUR/JPY (Euro / Japanese Yen)", symbol: "FX:EURJPY" },
-        { name: "GBP/JPY (British Pound / Japanese Yen)", symbol: "FX:GBPJPY" }
+        { name: "EUR/USD (Euro / Dollar)", symbol: "FX:EURUSD" },
+        { name: "GBP/USD (Pound / Dollar)", symbol: "FX:GBPUSD" },
+        { name: "USD/JPY (Dollar / Yen)", symbol: "FX:USDJPY" },
+        { name: "AUD/USD (Aussie / Dollar)", symbol: "FX:AUDUSD" },
+        { name: "USD/CAD (Dollar / CAD)", symbol: "FX:USDCAD" },
+        { name: "USD/CHF (Dollar / Franc)", symbol: "FX:USDCHF" }
       ],
       metals: [
         { name: "XAU/USD (Gold)", symbol: "OANDA:XAUUSD" },
         { name: "XAG/USD (Silver)", symbol: "OANDA:XAGUSD" },
-        { name: "USOIL (Crude Oil WTI)", symbol: "TVC:USOIL" },
-        { name: "UKOIL (Brent Crude Oil)", symbol: "TVC:UKOIL" },
-        { name: "NGAS (Natural Gas)", symbol: "TVC:NGAS" },
-        { name: "COPPER (Copper)", symbol: "TVC:COPPER" },
-        { name: "PLATINUM (Platinum)", symbol: "OANDA:XPTUSD" }
+        { name: "USOIL (WTI Oil)", symbol: "TVC:USOIL" },
+        { name: "UKOIL (Brent Oil)", symbol: "TVC:UKOIL" }
       ],
       stocks: [
-        { name: "NVDA (NVIDIA Corporation)", symbol: "NASDAQ:NVDA" },
-        { name: "AAPL (Apple Inc.)", symbol: "NASDAQ:AAPL" },
-        { name: "TSLA (Tesla Inc.)", symbol: "NASDAQ:TSLA" },
+        { name: "NVDA (NVIDIA)", symbol: "NASDAQ:NVDA" },
+        { name: "AAPL (Apple)", symbol: "NASDAQ:AAPL" },
+        { name: "TSLA (Tesla)", symbol: "NASDAQ:TSLA" },
         { name: "MSFT (Microsoft)", symbol: "NASDAQ:MSFT" },
-        { name: "AMZN (Amazon.com)", symbol: "NASDAQ:AMZN" },
-        { name: "GOOGL (Alphabet Inc.)", symbol: "NASDAQ:GOOGL" },
-        { name: "META (Meta Platforms)", symbol: "NASDAQ:META" },
-        { name: "SPX500 (S&P 500 Index)", symbol: "FOREXCOM:SPXUSD" },
-        { name: "NAS100 (Nasdaq 100 Index)", symbol: "FOREXCOM:NSXUSD" },
-        { name: "US30 (Dow Jones Industrial)", symbol: "FOREXCOM:DJI" }
+        { name: "AMZN (Amazon)", symbol: "NASDAQ:AMZN" },
+        { name: "SPX500 (S&P 500)", symbol: "FOREXCOM:SPXUSD" },
+        { name: "NAS100 (Nasdaq 100)", symbol: "FOREXCOM:NSXUSD" }
       ]
     };
 
@@ -333,16 +319,28 @@
         });
       }
 
-      changeTradingViewSymbol();
+      loadTradingViewChart();
     }
 
-    function changeTradingViewSymbol() {
+    function loadTradingViewChart() {
       const currentSymbol = document.getElementById('symbol-select').value;
-      if(currentSymbol) {
-        const iframe = document.getElementById('tv_iframe');
-        const formattedSymbol = encodeURIComponent(currentSymbol);
-        iframe.src = `https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&symbol=${formattedSymbol}&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=131722&theme=dark&style=1&timezone=Etc%2FUTC`;
-      }
+      if(!currentSymbol) return;
+
+      document.getElementById('tv_chart_container').innerHTML = '';
+      
+      new TradingView.widget({
+        "autosize": true,
+        "symbol": currentSymbol,
+        "interval": "15",
+        "timezone": "Etc/UTC",
+        "theme": "dark",
+        "style": "1",
+        "locale": "en",
+        "toolbar_bg": "#131722",
+        "enable_publishing": false,
+        "allow_symbol_change": true,
+        "container_id": "tv_chart_container"
+      });
     }
 
     function toggleBot() {
@@ -354,7 +352,7 @@
       const workingStatus = document.getElementById('bot-working-status');
 
       if(isBotActive) {
-        workingStatus.innerText = "RUNNING INDICATOR & RISK SCANNER...";
+        workingStatus.innerText = "SCANNING & MONITORING...";
         workingStatus.style.color = "#38bdf8";
         startAutoScanning();
       } else {
@@ -370,7 +368,7 @@
         if(!isBotActive) return;
 
         if(activePositions.length >= MAX_OPEN_TRADES) {
-          document.getElementById('ai-reasoning').innerText = `[RISK GUARD]: Max limit of ${MAX_OPEN_TRADES} open trades active. Monitoring risk limits...`;
+          document.getElementById('ai-reasoning').innerText = `[RISK GUARD]: Max limit of ${MAX_OPEN_TRADES} open trades active. Monitoring positions...`;
           return;
         }
 
@@ -380,21 +378,20 @@
 
         const rsiVal = (Math.random() * 60) + 20;
         const priceVsEMA200 = Math.random() > 0.45 ? 'ABOVE' : 'BELOW';
-        const atrFilter = Math.random() > 0.3;
 
-        if(priceVsEMA200 === 'ABOVE' && rsiVal < 35 && atrFilter) {
+        if(priceVsEMA200 === 'ABOVE' && rsiVal < 35) {
           triggerTrade(selectedAsset.name, 'BUY', `200 EMA Uptrend + RSI Oversold (${rsiVal.toFixed(1)})`);
         } 
-        else if(priceVsEMA200 === 'BELOW' && rsiVal > 65 && atrFilter) {
+        else if(priceVsEMA200 === 'BELOW' && rsiVal > 65) {
           triggerTrade(selectedAsset.name, 'SELL', `200 EMA Downtrend + RSI Overbought (${rsiVal.toFixed(1)})`);
         } 
         else {
-          document.getElementById('ai-reasoning').innerText = `[SCANNING]: ${selectedAsset.name} | EMA 200: ${priceVsEMA200} | RSI: ${rsiVal.toFixed(1)} | Waiting for strategy match...`;
+          document.getElementById('ai-reasoning').innerText = `[SCANNING]: ${selectedAsset.name} | EMA 200: ${priceVsEMA200} | RSI: ${rsiVal.toFixed(1)} | Searching entry...`;
         }
       }, 3500);
     }
 
-    function triggerTrade(assetName, type, reasonLog = "Indicator Strategy Signal") {
+    function triggerTrade(assetName, type, reasonLog = "Indicator Signal") {
       const metrics = getKotegawaMetrics();
       const calculatedLot = (metrics.maxRiskPerTrade / 1000).toFixed(2);
 
@@ -415,7 +412,7 @@
 
     function executeManualTrade(type) {
       if(activePositions.length >= MAX_OPEN_TRADES) {
-        alert(`Maximum ${MAX_OPEN_TRADES} active trades allowed simultaneously.`);
+        alert(`Maximum ${MAX_OPEN_TRADES} trades allowed at a time.`);
         return;
       }
 
@@ -424,4 +421,45 @@
       triggerTrade(assetName, type, "Manual Trade Trigger");
     }
 
-    function close
+    function closeTrade(id, reason = "Manual Close") {
+      const index = activePositions.findIndex(t => t.id === id);
+      if(index !== -1) {
+        const trade = activePositions[index];
+        totalCapital += trade.pnl;
+        document.getElementById('input-total-capital').value = totalCapital.toFixed(2);
+
+        tradeHistory.unshift({
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+          asset: trade.asset,
+          type: trade.type,
+          lots: trade.lots,
+          reason: reason,
+          pnl: trade.pnl
+        });
+
+        activePositions.splice(index, 1);
+        renderPositions();
+        renderHistory();
+        updateMetricsUI();
+        updateAnalytics();
+
+        document.getElementById('ai-reasoning').innerText = `[TRADE CLOSED]: ${reason} | P&L: ${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toFixed(2)}`;
+      }
+    }
+
+    function startPNLSimulation() {
+      pnlInterval = setInterval(() => {
+        for (let i = activePositions.length - 1; i >= 0; i--) {
+          let trade = activePositions[i];
+          const step = (Math.random() - 0.44) * 8; 
+          trade.pnl += step;
+
+          if(trade.pnl >= trade.tp) {
+            trade.pnl = trade.tp;
+            closeTrade(trade.id, "Take-Profit (TP)");
+            continue;
+          }
+
+          if(trade.pnl <= trade.sl) {
+            trade.pnl = trade.sl;
+            closeTrade(trade.id, "Stop-Loss (SL)
