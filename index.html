@@ -4,12 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TradePulse AI — World Top Indicators Engine</title>
+  <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     body { background-color: #0b0e14; color: #e1e7ef; padding: 12px; }
     
-    .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #1e293b; margin-bottom: 12px; }
-    .header h1 { font-size: 1.05rem; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
+    .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #1e293b; margin-bottom: 10px; }
+    .header h1 { font-size: 1rem; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
     
     .switch-container { display: flex; align-items: center; gap: 8px; }
     .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
@@ -19,9 +20,21 @@
     input:checked + .slider { background-color: #22c55e; }
     input:checked + .slider:before { transform: translateX(22px); }
 
+    /* Top Capital & Performance Grid */
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 6px; }
+    .stats-grid-top { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+    
+    .metric-card { background: #1e293b; padding: 8px; border-radius: 6px; text-align: center; }
+    .metric-card label { font-size: 0.62rem; color: #94a3b8; display: block; margin-bottom: 2px; }
+    .metric-card span { font-size: 0.88rem; font-weight: bold; }
+
+    .stat-card-top { background: #0f172a; border: 1px solid #1e293b; padding: 6px; border-radius: 6px; text-align: center; }
+    .stat-card-top label { font-size: 0.6rem; color: #64748b; display: block; }
+    .stat-card-top span { font-size: 0.85rem; font-weight: bold; }
+
     /* Navigation Tabs */
-    .nav-tabs { display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 4px; border-bottom: 1px solid #1e293b; }
-    .tab-btn { background: #1e293b; border: 1px solid #334155; color: #94a3b8; padding: 8px 14px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+    .nav-tabs { display: flex; gap: 6px; margin-bottom: 10px; overflow-x: auto; padding-bottom: 4px; border-bottom: 1px solid #1e293b; }
+    .tab-btn { background: #1e293b; border: 1px solid #334155; color: #94a3b8; padding: 8px 12px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.2s; }
     .tab-btn:hover { background: #334155; color: #fff; }
     .tab-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
 
@@ -29,20 +42,8 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    .card { background: #131722; border-radius: 8px; padding: 12px; border: 1px solid #1e293b; margin-bottom: 12px; }
-    .card h2 { font-size: 0.82rem; margin-bottom: 8px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
-    
-    /* Metrics Grid */
-    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
-    .metric-card { background: #1e293b; padding: 8px; border-radius: 6px; text-align: center; }
-    .metric-card label { font-size: 0.64rem; color: #94a3b8; display: block; margin-bottom: 2px; }
-    .metric-card span { font-size: 0.9rem; font-weight: bold; }
-
-    /* Performance Grid */
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-    .stat-box { background: #0f172a; border: 1px solid #1e293b; padding: 10px; border-radius: 6px; text-align: center; }
-    .stat-box label { font-size: 0.65rem; color: #64748b; display: block; }
-    .stat-box span { font-size: 1.1rem; font-weight: bold; }
+    .card { background: #131722; border-radius: 8px; padding: 12px; border: 1px solid #1e293b; margin-bottom: 10px; }
+    .card h2 { font-size: 0.8rem; margin-bottom: 8px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
 
     .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
     select, button, input { width: 100%; padding: 10px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 6px; font-size: 0.85rem; font-weight: 600; }
@@ -50,7 +51,7 @@
     .chart-box { height: 450px; width: 100%; border-radius: 6px; overflow: hidden; border: 1px solid #1e293b; background: #0f172a; position: relative; }
     
     .signal-box { background: #1e293b; padding: 12px; border-radius: 6px; margin: 8px 0; }
-    .ai-think-box { font-size: 0.8rem; color: #cbd5e1; background: #0f172a; padding: 10px; border-radius: 4px; border-left: 3px solid #38bdf8; margin-top: 8px; line-height: 1.4; font-family: monospace; }
+    .ai-think-box { font-size: 0.78rem; color: #cbd5e1; background: #0f172a; padding: 10px; border-radius: 4px; border-left: 3px solid #38bdf8; margin-top: 8px; line-height: 1.4; font-family: monospace; }
     
     .btn-group { display: flex; gap: 8px; margin-top: 8px; }
     .btn-buy { background: #22c55e; color: #000; padding: 10px; border: none; border-radius: 6px; font-weight: bold; width: 50%; cursor: pointer; }
@@ -69,7 +70,7 @@
   <div class="header">
     <h1>📈 TradePulse AI — World Top Indicators Engine</h1>
     <div class="switch-container">
-      <span id="status-label" style="color: #ef4444; font-size:0.8rem; font-weight:bold;">AUTO BOT OFF</span>
+      <span id="status-label" style="color: #ef4444; font-size:0.75rem; font-weight:bold;">AUTO BOT OFF</span>
       <label class="switch">
         <input type="checkbox" id="bot-toggle" onchange="toggleBot()">
         <span class="slider"></span>
@@ -96,6 +97,25 @@
     </div>
   </div>
 
+  <div class="stats-grid-top">
+    <div class="stat-card-top">
+      <label>TOTAL TRADES</label>
+      <span id="top-total-trades">0</span>
+    </div>
+    <div class="stat-card-top">
+      <label>WIN TRADES</label>
+      <span id="top-win-trades" style="color: #22c55e;">0</span>
+    </div>
+    <div class="stat-card-top">
+      <label>LOSS TRADES</label>
+      <span id="top-loss-trades" style="color: #ef4444;">0</span>
+    </div>
+    <div class="stat-card-top">
+      <label>WIN RATIO (AVG)</label>
+      <span id="top-win-ratio" style="color: #38bdf8;">0.0%</span>
+    </div>
+  </div>
+
   <div class="nav-tabs">
     <button class="tab-btn active" onclick="switchTab('tab-terminal', this)">📊 Chart & Terminal</button>
     <button class="tab-btn" onclick="switchTab('tab-bot-status', this)">🤖 Indicator Strategy Engine</button>
@@ -108,7 +128,7 @@
       <h2>Market Terminal</h2>
       <div class="controls-grid">
         <div>
-          <label style="font-size:0.7rem; color:#64748b;">CATEGORY</label>
+          <label style="font-size:0.68rem; color:#64748b;">CATEGORY</label>
           <select id="asset-category" onchange="updateAssetDropdown()">
             <option value="crypto" selected>Crypto Market (Binance)</option>
             <option value="forex">Forex Major & Minor (FXCM/OANDA)</option>
@@ -117,13 +137,11 @@
           </select>
         </div>
         <div>
-          <label style="font-size:0.7rem; color:#64748b;">SYMBOL</label>
+          <label style="font-size:0.68rem; color:#64748b;">SYMBOL</label>
           <select id="symbol-select" onchange="changeTradingViewSymbol()"></select>
         </div>
       </div>
-      <div class="chart-box" id="tradingview_chart_container">
-        <div style="display:flex; justify-content:center; align-items:center; height:100%; color:#64748b;">Loading TradingView Engine...</div>
-      </div>
+      <div class="chart-box" id="tradingview_chart_container"></div>
     </div>
   </div>
 
@@ -190,29 +208,7 @@
 
   <div id="tab-analytics" class="tab-content">
     <div class="card">
-      <h2>Win / Loss Ratio & Performance</h2>
-      <div class="stats-grid">
-        <div class="stat-box">
-          <label>TOTAL TRADES</label>
-          <span id="stat-total-trades">0</span>
-        </div>
-        <div class="stat-box">
-          <label>WINNING TRADES</label>
-          <span id="stat-win-trades" style="color: #22c55e;">0</span>
-        </div>
-        <div class="stat-box">
-          <label>LOSING TRADES</label>
-          <span id="stat-loss-trades" style="color: #ef4444;">0</span>
-        </div>
-        <div class="stat-box">
-          <label>WINNING RATIO</label>
-          <span id="stat-win-ratio" style="color: #38bdf8;">0.0%</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Trade History</h2>
+      <h2>Trade History Log</h2>
       <table>
         <thead>
           <tr>
@@ -232,13 +228,12 @@
   </div>
 
   <script>
-    // TradingView Assets - ALL MAJOR SYMBOLS AVAILABLE
     const assets = {
       crypto: [
         { name: "BTC/USDT (Bitcoin)", symbol: "BINANCE:BTCUSDT" },
         { name: "ETH/USDT (Ethereum)", symbol: "BINANCE:ETHUSDT" },
         { name: "SOL/USDT (Solana)", symbol: "BINANCE:SOLUSDT" },
-        { name: "BNB/USDT (Binance Coin)", symbol: "BINANCE:BNBUSDT" },
+        { name: "BNB/USDT (Binance)", symbol: "BINANCE:BNBUSDT" },
         { name: "XRP/USDT (Ripple)", symbol: "BINANCE:XRPUSDT" },
         { name: "ADA/USDT (Cardano)", symbol: "BINANCE:ADAUSDT" }
       ],
@@ -254,14 +249,14 @@
         { name: "XAU/USD (Gold)", symbol: "OANDA:XAUUSD" },
         { name: "XAG/USD (Silver)", symbol: "OANDA:XAGUSD" },
         { name: "USOIL (Crude Oil)", symbol: "TVC:USOIL" },
-        { name: "UKOIL (Brent)", symbol: "TVC:UKOIL" }
+        { name: "UKOIL (Brent Oil)", symbol: "TVC:UKOIL" }
       ],
       stocks: [
         { name: "NVDA (NVIDIA)", symbol: "NASDAQ:NVDA" },
         { name: "AAPL (Apple)", symbol: "NASDAQ:AAPL" },
         { name: "TSLA (Tesla)", symbol: "NASDAQ:TSLA" },
-        { name: "SPX500 (S&P 500 Index)", symbol: "FOREXCOM:SPXUSD" },
-        { name: "NAS100 (Nasdaq 100 Index)", symbol: "FOREXCOM:NSXUSD" }
+        { name: "SPX500 (S&P 500)", symbol: "FOREXCOM:SPXUSD" },
+        { name: "NAS100 (Nasdaq 100)", symbol: "FOREXCOM:NSXUSD" }
       ]
     };
 
@@ -315,46 +310,35 @@
     function changeTradingViewSymbol() {
       const currentSymbol = document.getElementById('symbol-select').value;
       if(currentSymbol) {
-        loadTradingViewWidget(currentSymbol);
+        renderTradingViewChart(currentSymbol);
       }
     }
 
-    // Dynamic Safe TradingView Script Loader
-    function loadTradingViewWidget(symbol) {
+    function renderTradingViewChart(symbol) {
       const container = document.getElementById('tradingview_chart_container');
-      container.innerHTML = '<div style="display:flex; justify-content:center; align-items:center; height:100%; color:#64748b;">Loading chart...</div>';
+      container.innerHTML = ''; // clear previous widget
 
-      if (typeof TradingView !== 'undefined') {
-        renderWidget(symbol);
+      if (typeof TradingView !== 'undefined' && TradingView.widget) {
+        new TradingView.widget({
+          "autosize": true,
+          "symbol": symbol,
+          "interval": "15",
+          "timezone": "Etc/UTC",
+          "theme": "dark",
+          "style": "1",
+          "locale": "en",
+          "toolbar_bg": "#131722",
+          "enable_publishing": false,
+          "allow_symbol_change": true,
+          "container_id": "tradingview_chart_container",
+          "hide_side_toolbar": false,
+          "studies": ["STD;EMA", "STD;RSI", "STD;ATR"]
+        });
       } else {
-        const script = document.createElement('script');
-        script.src = 'https://s3.tradingview.com/tv.js';
-        script.type = 'text/javascript';
-        script.onload = () => { renderWidget(symbol); };
-        script.onerror = () => {
-          container.innerHTML = '<div style="color:#ef4444; text-align:center; padding:20px;">Chart load nahi ho saka. Kripya apna internet connection check karein.</div>';
-        };
-        document.head.appendChild(script);
+        // Fallback Direct Iframe if tv.js script loading gets delayed
+        const cleanSymbol = symbol.replace(":", "%3A");
+        container.innerHTML = `<iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&symbol=${cleanSymbol}&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=131722&theme=dark&style=1&timezone=Etc%2FUTC" style="width: 100%; height: 100%; border: none;"></iframe>`;
       }
-    }
-
-    function renderWidget(symbol) {
-      document.getElementById('tradingview_chart_container').innerHTML = '';
-      new TradingView.widget({
-        "autosize": true,
-        "symbol": symbol,
-        "interval": "15",
-        "timezone": "Etc/UTC",
-        "theme": "dark",
-        "style": "1",
-        "locale": "en",
-        "toolbar_bg": "#131722",
-        "enable_publishing": false,
-        "allow_symbol_change": true,
-        "container_id": "tradingview_chart_container",
-        "hide_side_toolbar": false,
-        "studies": ["STD;EMA", "STD;RSI", "STD;ATR"]
-      });
     }
 
     function toggleBot() {
@@ -466,4 +450,25 @@
         for (let i = activePositions.length - 1; i >= 0; i--) {
           let trade = activePositions[i];
           const step = (Math.random() - 0.44) * 8; 
-          trade.pnl += 
+          trade.pnl += step;
+
+          if(trade.pnl >= trade.tp) {
+            trade.pnl = trade.tp;
+            closeTrade(trade.id, "Take-Profit (TP)");
+            continue;
+          }
+
+          if(trade.pnl <= trade.sl) {
+            trade.pnl = trade.sl;
+            closeTrade(trade.id, "Stop-Loss (SL)");
+            continue;
+          }
+        }
+        renderPositions();
+        updateMetricsUI();
+      }, 1200);
+    }
+
+    function updateMetricsUI() {
+      const metrics = getKotegawaMetrics();
+      document.getE
