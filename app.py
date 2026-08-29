@@ -14,7 +14,6 @@ closed_trades = []
 def fetch_market_price_and_candles(symbol):
     clean_sym = symbol.replace('BINANCE:', '').replace('OANDA:', '').replace('FX:', '').replace('/', '').upper()
     
-    # Crypto via Binance API
     if 'BTC' in clean_sym or 'ETH' in clean_sym or 'SOL' in clean_sym or 'BNB' in clean_sym:
         try:
             url = f"https://api.binance.com/api/v3/klines?symbol={clean_sym}&interval=1m&limit=100"
@@ -26,7 +25,6 @@ def fetch_market_price_and_candles(symbol):
         except Exception:
             pass
 
-    # Metals / Gold (XAUUSD) & Forex Backup Stream via Free Price Engine
     try:
         yf_symbol = "GC=F" if "XAU" in clean_sym else f"{clean_sym}=X"
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{yf_symbol}?interval=1m&range=1d"
@@ -38,10 +36,33 @@ def fetch_market_price_and_candles(symbol):
         lows = [l for l in result['indicators']['quote'][0]['low'] if l is not None]
         return {"price": closes[-1], "highs": highs, "lows": lows, "closes": closes}
     except Exception:
-        # Fallback Default Base Values
         base_price = 2400.00 if "XAU" in clean_sym else (1.0850 if "EUR" in clean_sym else 65000.0)
         dummy_closes = [base_price + (np.random.randn() * 0.5) for _ in range(100)]
         return {"price": dummy_closes[-1], "highs": [c + 1.0 for c in dummy_closes], "lows": [c - 1.0 for c in dummy_closes], "closes": dummy_closes}
+
+def calculate_ema(prices, period):
+    prices = np.array(prices)
+    alpha = 2 / (period + 1)
+    ema = [prices[0]]
+    for price in prices[1:]:
+        ema.append((price * alpha) + (ema[-1] * (1 - alpha)))
+    return np.array(ema)
+
+def calculate_rsi(prices, period=14):
+    deltas = np.diff(prices)
+    gains = np.where(deltas > 0, deltas, 0)
+    losses = np.where(deltas < 0, -deltas, 0)
+    avg_gain = np.mean(gains[-period:]) if len(gains) >= period else 1
+    avg_loss = np.mean(losses[-period:]) if len(losses) >= period else 1
+    rs = avg_gain / (avg_loss + 1e-9)
+    return 100.0 - (100.0 / (1.0 + rs))
+
+def calculate_macd(closes):
+    ema12 = calculate_ema(closes, 12)
+    ema26 = calculate_ema(closes, 26)
+    macd_line = ema12 - ema26
+    signal_line = calculate_ema(macd_line, 9)
+    return macd_line, signal_line
 
 def calculate_quant_metrics(data):
     closes = np.array(data["closes"])
@@ -49,7 +70,6 @@ def calculate_quant_metrics(data):
     lows = np.array(data["lows"])
     current_price = closes[-1]
     
-    # ATR Calculation
     tr1 = highs[1:] - lows[1:]
     tr2 = np.abs(highs[1:] - closes[:-1])
     tr3 = np.abs(lows[1:] - closes[:-1])
@@ -57,37 +77,32 @@ def calculate_quant_metrics(data):
     atr = np.mean(tr[-14:]) if len(tr) >= 14 else np.mean(tr)
     atr = max(atr, 0.5)
     
-    # RSI & Moving Averages
-    deltas = np.diff(closes)
-    gains = np.where(deltas > 0, deltas, 0)
-    losses = np.where(deltas < 0, -deltas, 0)
-    avg_gain = np.mean(gains[-14:]) if len(gains) >= 14 else 1
-    avg_loss = np.mean(losses[-14:]) if len(losses) >= 14 else 1
-    rs = avg_gain / (avg_loss + 1e-9)
-    rsi = 100.0 - (100.0 / (1.0 + rs))
-
-    ema20 = np.mean(closes[-20:])
-    ema50 = np.mean(closes[-50:])
+    rsi = calculate_rsi(closes, 14)
+    macd_line, signal_line = calculate_macd(closes)
     
     support = np.min(lows[-20:])
     resistance = np.max(highs[-20:])
     
-    if (current_price > ema20) and (rsi < 65):
-        signal = "HIGH-PROBABILITY BUY SETUP"
+    # Precision Rules
+    bullish_crossover = macd_line[-1] > signal_line[-1] and macd_line[-2] <= signal_line[-2]
+    bearish_crossover = macd_line[-1] < signal_line[-1] and macd_line[-2] >= signal_line[-2]
+    
+    if bullish_crossover and rsi < 65:
+        signal = "PRECISION BUY SETUP"
         action = "BUY"
-    elif (current_price < ema20) and (rsi > 35):
-        signal = "HIGH-PROBABILITY SELL SETUP"
+    elif bearish_crossover and rsi > 35:
+        signal = "PRECISION SELL SETUP"
         action = "SELL"
     else:
-        signal = "MARKET CONSOLIDATING (HOLD)"
+        signal = "WAITING FOR SETUP"
         action = "HOLD"
         
     return {
         "price": round(current_price, 2),
         "atr": round(atr, 2),
         "rsi": round(rsi, 2),
-        "ema20": round(ema20, 2),
-        "ema50": round(ema50, 2),
+        "ema20": round(np.mean(closes[-20:]), 2),
+        "ema50": round(np.mean(closes[-50:]), 2),
         "support": round(support, 2),
         "resistance": round(resistance, 2),
         "signal": signal,
@@ -112,7 +127,6 @@ def get_market_data():
 def execute_trade():
     global active_trades
     req = request.get_json() or {}
-    
     symbol = req.get('symbol', 'XAU/USD')
     trade_type = req.get('type', 'BUY').upper()
     lots = float(req.get('lots', 0.10))
